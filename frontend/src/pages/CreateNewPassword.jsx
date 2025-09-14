@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { ethers } from "ethers";
 
 export default function CreateNewPassword() {
   const [password, setPassword] = useState("");
@@ -9,6 +10,19 @@ export default function CreateNewPassword() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
+
+  const handleNext = async () => {
+    if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+    }
+
+    const wallet = ethers.Wallet.createRandom();
+
+    const encryptedJson = await wallet.encrypt(password);
+    localStorage.setItem("encryptedWallet", encryptedJson);
+
+    };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
@@ -100,7 +114,7 @@ export default function CreateNewPassword() {
         {/* Buttons */}
         <div className="flex justify-between">
           <button className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-600" onClick={() => navigate("/")}>Back</button>
-          <button className="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500">Next</button>
+          <button className="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500" onClick={() => handleNext()}>Next</button>
         </div>
       </div>
     </div>
