@@ -1,7 +1,7 @@
-const router = require('express').Router();
+const router = require("express").Router();
+const { nonce, verify } = require("../controllers/authNonce");
 
-const authController = require('../controllers/authController');
-
-router.post('/create-wallet',authController.createWallet);
+router.post("/auth/nonce", nonce);
+router.post("/auth/verify", verify);
 
 module.exports = router;
