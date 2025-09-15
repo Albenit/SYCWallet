@@ -12,17 +12,43 @@ export default function CreateNewPassword() {
   const navigate = useNavigate();
 
   const handleNext = async () => {
+    // Basic checks
     if (password !== confirmPassword) {
-        alert("Passwords do not match!");
-        return;
+      alert("Passwords do not match!");
+      return;
     }
 
+    const strongEnough =
+      password.length >= 8 &&
+      /[A-Z]/.test(password) &&
+      /\d/.test(password) &&
+      /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    if (!strongEnough) {
+      alert("Please meet the password rules before continuing.");
+      return;
+    }
+
+    // Create wallet + encrypt with the provided password
     const wallet = ethers.Wallet.createRandom();
+    const phrase = wallet.mnemonic?.phrase;     
+
+    if (!phrase) {
+      alert("Could not generate a recovery phrase. Please try again.");
+      return;
+    }
 
     const encryptedJson = await wallet.encrypt(password);
     localStorage.setItem("encryptedWallet", encryptedJson);
+    localStorage.setItem("walletAddress", wallet.address);
 
-    };
+    sessionStorage.setItem("tmp_secret_phrase", phrase);
+
+    // Navigate and pass phrase in memory state
+    navigate("/secret-phrases", {
+      state: { phrase, address: wallet.address },
+      replace: true,
+    });
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
@@ -113,8 +139,8 @@ export default function CreateNewPassword() {
 
         {/* Buttons */}
         <div className="flex justify-between">
-          <button className="px-6 py-2 rounded bg-gray-700 hover:bg-gray-600" onClick={() => navigate("/")}>Back</button>
-          <button className="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500" onClick={() => handleNext()}>Next</button>
+          <button className="px-6 py-2 cursor-pointer" onClick={() => navigate("/")}>Back</button>
+          <button className="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500 cursor-pointer" onClick={() => handleNext()}>Next</button>
         </div>
       </div>
     </div>

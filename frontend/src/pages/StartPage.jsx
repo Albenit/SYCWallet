@@ -7,7 +7,7 @@ export default function StartPage() {
 const navigate = useNavigate();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
-      <div className="p-8 rounded-[8px] max-w-xl w-full text-center border">
+      <div className="p-8 rounded-[8px] max-w-xl w-full text-center border border-gray-700 bg-[#0A0A1A]">
         {/* Title */}
         <div className="text-[26px] font-bold mb-2">Let’s get Started</div>
         <p className="text-gray-400 text-[18px] text-sm mb-6">
@@ -44,7 +44,7 @@ const navigate = useNavigate();
           <button
             onClick={() => navigate("/createnewpassword")}
             disabled={!accepted}
-            className={`w-xs py-3 rounded-lg font-medium transition bg-gradient-to-r from-blue-400 to-blue-600 hover:opacity-90`}
+            className={`w-xs py-3 rounded-lg font-medium transition bg-gradient-to-r from-blue-400 to-blue-600 hover:opacity-90 ${!accepted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           >
             Create a new wallet
           </button>
