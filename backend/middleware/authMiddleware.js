@@ -1,18 +1,15 @@
-const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET;
+const jwt = require('jsonwebtoken');
 
-function authMiddleware(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: "unauthorized" });
+module.exports = function auth(req, res, next) {
+  const hdr = req.headers.authorization || '';
+  const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+  if (!token) return res.status(401).json({ error: 'no_token' });
 
-  const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch {
-    return res.status(401).json({ error: "invalid_token" });
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { address: payload.address }; // checksum cased from your verify()
+    return next();
+  } catch (e) {
+    return res.status(401).json({ error: 'bad_token' });
   }
-}
-
-module.exports = authMiddleware;
+};

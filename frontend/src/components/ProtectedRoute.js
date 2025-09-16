@@ -1,11 +1,11 @@
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem("auth_token");
+  const navigate = useNavigate()
 
   if (!token) {
-    // 🚫 If no token, redirect to start/login page
-    return <Navigate to="/" />;
+    return navigate("/signup");
   }
 
 

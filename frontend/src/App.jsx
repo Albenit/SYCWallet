@@ -6,11 +6,12 @@ import SecretPhrases from "./pages/SecretPhrases";
 import ConfirmSecretPhrase from "./pages/ConfirmSecretPhrase";
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<StartPage />} />
+        <Route path="/signup" element={<StartPage />} />
         <Route path="/createnewpassword" element={<CreateNewPassword />} />
         <Route path="/secret-phrases" element={<SecretPhrases />} />
         <Route path="/confirm-secret-phrase" element={<ConfirmSecretPhrase />} />
@@ -21,6 +22,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />
