@@ -114,7 +114,7 @@ export default function SecretPhrases() {
         <div className="flex justify-between">
           <button
             className="px-6 py-2 w-md rounded text-gray-200 cursor-pointer"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/signup")}
           >
             Back
           </button>

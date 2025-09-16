@@ -79,8 +79,6 @@ export default function ConfirmSecretPhrase() {
         credentials: "include",
       });
 
-      
-
       if (!verifyRes.ok) {
         const t = await verifyRes.text().catch(() => "");
         throw new Error(t || "Verification failed");
@@ -146,7 +144,7 @@ export default function ConfirmSecretPhrase() {
         <div className="flex justify-between mt-[30px]">
           <button
             className="px-6 py-2 w-md rounded text-gray-200 cursor-pointer disabled:opacity-50"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/signup")}
             disabled={submitting}
           >
             Back

@@ -139,7 +139,7 @@ export default function CreateNewPassword() {
 
         {/* Buttons */}
         <div className="flex justify-between">
-          <button className="px-6 py-2 cursor-pointer" onClick={() => navigate("/")}>Back</button>
+          <button className="px-6 py-2 cursor-pointer" onClick={() => navigate("/signup")}>Back</button>
           <button className="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500 cursor-pointer" onClick={() => handleNext()}>Next</button>
         </div>
       </div>
