@@ -7,11 +7,15 @@ import ConfirmSecretPhrase from "./pages/ConfirmSecretPhrase";
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
+import Signup from "./pages/Signup";
+import ImportWallet from "./pages/ImportWallet";
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/signup" element={<StartPage />} />
+        <Route path="/" element={<StartPage />} />
+        <Route path="/import-wallet" element={<ImportWallet />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/createnewpassword" element={<CreateNewPassword />} />
         <Route path="/secret-phrases" element={<SecretPhrases />} />
         <Route path="/confirm-secret-phrase" element={<ConfirmSecretPhrase />} />

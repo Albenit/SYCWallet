@@ -26,19 +26,29 @@ export default function Dashboard() {
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
 
-    const fetchData = async () => {
+    const fetchAddress = async () => {
       try {
-        // 1) Get address
-        if (!address) {
-          const res = await fetch("http://127.0.0.1:5000/api/wallet/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (!res.ok) throw new Error("Failed to fetch address");
-          const me = await res.json();
-          setAddress(me.address);
-        }
+        const res = await fetch("http://127.0.0.1:5000/api/wallet/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch address");
+        const me = await res.json();
+        setAddress(me.address);
+      } catch (e) {
+        console.error(e);
+      }
+    };
 
-        // 2) Fetch balance
+    if (!address) fetchAddress();
+  }, []);
+
+  useEffect(() => {
+    if (!address) return;
+
+    const token = localStorage.getItem("auth_token");
+
+    const fetchBalance = async () => {
+      try {
         const balRes = await fetch(
           `http://127.0.0.1:5000/api/wallet/${selectedChain}/native-balance`,
           {
@@ -56,8 +66,10 @@ export default function Dashboard() {
       }
     };
 
-    fetchData();
+    fetchBalance();
   }, [selectedChain, address]);
+
+
 
   const handleCopy = async () => {
     if (!address) return;
