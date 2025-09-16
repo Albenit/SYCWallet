@@ -13,9 +13,8 @@ export default function Settings() {
 
   const handleLogout = () => {
     localStorage.removeItem("auth_token");
-    localStorage.clear()
     sessionStorage.clear();
-    navigate("/signup");
+    navigate("/");
   };
 
     useEffect(() => {
@@ -86,14 +85,14 @@ const handleCopy = async () => {
             </div>
         </div>
         {/* Export Keys (disabled input style) */}
-        <div className="w-full">
+        {/* <div className="w-full">
           <input
             type="text"
             disabled
             value="Export Keys"
             className="w-full rounded-md bg-black/40 text-gray-400 px-4 py-3 text-sm border border-gray-700 cursor-not-allowed"
           />
-        </div>
+        </div> */}
 
         {/* Logout Button */}
         <button

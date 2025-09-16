@@ -1,13 +1,11 @@
+const User = require('../models/user');
 const crypto = require("crypto");
 const { utils } = require("ethers");
-
 const NONCE_TTL_MS = 10 * 60 * 1000;
 const nonces = new Map();
-
 const jwt = require("jsonwebtoken");
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_EXPIRY = "1h"; // or "7d", etc.
+
 
 function isEthAddress(addr) {
   return /^0x[a-fA-F0-9]{40}$/.test(addr || "");
@@ -17,6 +15,17 @@ function sweepExpired() {
   for (const [addr, v] of nonces.entries()) {
     if (!v || v.exp <= now) nonces.delete(addr);
   }
+}
+
+async function storeUserAddress(address) {
+    let user = await User.findOne({ address });
+    if (!user) {
+      user = await User.create({ address });
+    }
+
+    user.lastLogin = new Date();
+    user.loginCount = (user.loginCount || 0) + 1;
+    await user.save();
 }
 
 async function nonce(req, res) {
@@ -76,10 +85,9 @@ async function verify(req, res) {
 
     nonces.delete(address);
 
-    const token = jwt.sign(
-      { address: utils.getAddress(addressRaw) },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRY }
+    storeUserAddress(address);
+
+    const token = jwt.sign({ address: utils.getAddress(addressRaw) },process.env.JWT_SECRET,{ expiresIn: '2h' }
     );
 
     return res.json({ ok: true, token });
