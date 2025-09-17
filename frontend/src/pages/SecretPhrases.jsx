@@ -3,13 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ClipboardCopy from '../assets/svg/copyToClipBoard.svg';
 
 
-
 export default function SecretPhrases() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isNextButtonEnable, setNextButtonEnable] = useState(false);
 
-  // Try to get the mnemonic from router state or sessionStorage
   const rawMnemonic =
     (location.state && (location.state).mnemonic) ||
     (typeof window !== "undefined" ? sessionStorage.getItem("tmp_secret_phrase") : "") ||
@@ -44,9 +42,9 @@ export default function SecretPhrases() {
     setNextButtonEnable(true);
   }
 
-    const handleNext = () => {
+  const handleNext = () => {
     navigate("/confirm-secret-phrase", { state: { mnemonic: words.join(" ") } });
-    };
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
@@ -78,36 +76,36 @@ export default function SecretPhrases() {
 
         {/* Phrase grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-            {words.map((w, i) => (
-                <div
-                key={i}
-                className="flex items-center justify-start px-4 py-3 rounded-md bg-[#151528] border border-[#2B2B45] text-left"
-                >
-                <span className="inline-flex items-center justify-center text-xs font-semibold mr-3 w-6 h-6 rounded-full bg-[#0E0E1F] border border-[#2B2B45] text-gray-300">
-                    {i + 1}
-                </span>
-                <span
-                    className={`
+          {words.map((w, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-start px-4 py-3 rounded-md bg-[#151528] border border-[#2B2B45] text-left"
+            >
+              <span className="inline-flex items-center justify-center text-xs font-semibold mr-3 w-6 h-6 rounded-full bg-[#0E0E1F] border border-[#2B2B45] text-gray-300">
+                {i + 1}
+              </span>
+              <span
+                className={`
                     text-sm transition 
                     ${w ? "text-gray-100" : "text-gray-500"} 
                     ${!isNextButtonEnable ? "blur-sm select-none" : "blur-0"}
                     `}
-                >
-                    {w || "••••••"}
-                </span>
-                </div>
-            ))}
+              >
+                {w || "••••••"}
+              </span>
             </div>
+          ))}
+        </div>
 
         {/* Copy action */}
         {isNextButtonEnable && (
-        <button
-          onClick={handleCopy}
-          className="mx-auto mb-8 flex items-center gap-2 text-sm text-gray-300 hover:text-white transition cursor-pointer"
-        >
-          <img src={ClipboardCopy} alt="" />
+          <button
+            onClick={handleCopy}
+            className="mx-auto mb-8 flex items-center gap-2 text-sm text-gray-300 hover:text-white transition cursor-pointer"
+          >
+            <img src={ClipboardCopy} alt="" />
             Copy to Clipboard
-        </button>
+          </button>
         )}
 
         {/* Nav buttons */}
@@ -119,22 +117,22 @@ export default function SecretPhrases() {
             Back
           </button>
 
-            {isNextButtonEnable == false ? (
-                <button
-                    className="px-6 py-2 w-md rounded bg-blue-600 hover:bg-blue-500 cursor-pointer"
-                    onClick={showPharse}
-                >
-                    Show
-                </button>
-                ) : (
-                <button
-                    className="px-6 py-2  w-md rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
-                    onClick={handleNext}
-                    disabled={words.filter(Boolean).length !== 12}
-                >
-                    Next
-                </button>
-            )}
+          {isNextButtonEnable == false ? (
+            <button
+              className="px-6 py-2 w-md rounded bg-blue-600 hover:bg-blue-500 cursor-pointer"
+              onClick={showPharse}
+            >
+              Show
+            </button>
+          ) : (
+            <button
+              className="px-6 py-2  w-md rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
+              onClick={handleNext}
+              disabled={words.filter(Boolean).length !== 12}
+            >
+              Next
+            </button>
+          )}
 
         </div>
       </div>

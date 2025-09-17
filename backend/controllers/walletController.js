@@ -1,8 +1,8 @@
 const express = require('express');
-const { ethers } = require('ethers');
-const auth = require('../middleware/authMiddleware');
+const { ethers } = require("ethers");
 const { getProvider } = require('../chain/providers');
 const ERC20_ABI = require('../chain/erc20');
+
 
 exports.getNativeBalance = async (req, res) => {
     try {
@@ -73,3 +73,4 @@ exports.getAccountBasic = async (req, res) => {
         return res.status(400).json({ error: e.message || 'failed' });
     }
 }
+

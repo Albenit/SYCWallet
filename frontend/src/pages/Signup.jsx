@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
   const [accepted, setAccepted] = useState(false);
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
       <div className="p-8 rounded-[8px] max-w-xl w-full text-center border border-gray-700 bg-[#0A0A1A]">
@@ -15,10 +16,10 @@ const navigate = useNavigate();
           world of web3 accessible to all.
         </p>
 
-        {/* Logo */} 
-      <div className="flex flex-col items-center mb-6">
-        <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
-      </div>
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-6">
+          <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
+        </div>
         {/* Progress dots */}
         <div className="flex justify-center space-x-2 mb-6">
           <span className="w-3 h-3 rounded-full bg-white"></span>

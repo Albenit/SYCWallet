@@ -8,7 +8,6 @@ const ProtectedRoute = ({ children }) => {
     return navigate("/signup");
   }
 
-
   return children;
 };
 
