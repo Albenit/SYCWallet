@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Signup from "./pages/Signup";
 import ImportWallet from "./pages/ImportWallet";
+import History from "./pages/History";
 function App() {
   return (
     <Router>
@@ -35,6 +36,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Settings />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <History />
           </ProtectedRoute>
         }
       />

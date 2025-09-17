@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import coinAvatar from "../assets/svg/coinAvatar.svg";
 import { useNavigate } from "react-router-dom";
-import { Copy, Home, Clock, Settings as SettingsIcon, ArrowUpRight, Download } from "lucide-react";
-
+import { Copy, Home, Clock, Settings as SettingsIcon } from "lucide-react";
+import useWalletMe from "../hooks/useWalletMe";
+import Navbar from "../components/navbar";
 
 
 export default function Settings() {
   const navigate = useNavigate();
-  const [address, setAddress] = useState("");
-  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const handleLogout = () => {
@@ -17,33 +16,9 @@ export default function Settings() {
     navigate("/");
   };
 
-    useEffect(() => {
-      const token = localStorage.getItem("auth_token");
-  
-      const fetchData = async () => {
-        try {
-          // 1) Get address
-          if (!address) {
-            const res = await fetch("http://127.0.0.1:5000/api/wallet/me", {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!res.ok) throw new Error("Failed to fetch address");
-            const me = await res.json();
-            setAddress(me.address);
-          }
-  
-        } catch (e) {
-          console.error(e);
-          setBalance(null);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchData();
-    }, [ address]);
+  const { address, loading } = useWalletMe();
 
-const handleCopy = async () => {
+  const handleCopy = async () => {
     if (!address) return;
     try {
       await navigator.clipboard.writeText(address);
@@ -103,30 +78,8 @@ const handleCopy = async () => {
         </button>
 
                   {/* bottom navbar */}
-          <div className="mt-6 rounded-b-xl bg-gradient-to-t from-[#0A0F17] to-[#0A0A1A] px-6 py-4">
-            <div className="grid grid-cols-3 gap-2 text-center text-xs text-gray-300">
-              <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => navigate("/dashboard")}>
-                <div  className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/10">
-                  <Home size={18} />
-                </div>
-                <span>Home</span>
-              </div>
 
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/5">
-                  <Clock size={18} />
-                </div>
-                <span>History</span>
-              </div>
-
-              <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => navigate("/settings")}>
-                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/5">
-                  <SettingsIcon size={18} />
-                </div>
-                <span>Settings</span>
-              </div>
-            </div>
-          </div>
+          <Navbar/>
       </div>
     </div>
   );

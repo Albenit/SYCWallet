@@ -10,14 +10,12 @@ export default function StartPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API = "http://127.0.0.1:5000"; // adjust for prod
+  const API = "http://127.0.0.1:5000"; 
 
-  // ===== Helper: signature-based login using a Wallet instance (ethers Wallet)
   async function signInWithWallet(wallet) {
-    // wallet: ethers.Wallet (decrypted) or Signer (MetaMask provider signer)
     try {
       const addr = await wallet.getAddress ? await wallet.getAddress() : wallet.address;
-      // 1) request nonce
+
       const nonceRes = await fetch(`${API}/api/auth/nonce`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -30,11 +28,9 @@ export default function StartPage() {
       }
       const { nonce } = await nonceRes.json();
 
-      // 2) sign message
       const message = `Sign in to YourApp\nAddress: ${addr}\nNonce: ${nonce}`;
       const signature = await wallet.signMessage(message);
 
-      // 3) verify and get JWT
       const verifyRes = await fetch(`${API}/api/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -46,7 +42,7 @@ export default function StartPage() {
         throw new Error(t || "Verification failed");
       }
       const data = await verifyRes.json();
-      // server returns { token, ... } — store token for API calls
+
       localStorage.setItem("auth_token", data.token);
       return data;
     } catch (e) {
@@ -54,7 +50,6 @@ export default function StartPage() {
     }
   }
 
-  // ===== Login handler: decrypt local encrypted JSON with password, then sign
   async function handleLogin(e) {
     e.preventDefault();
     setError("");
@@ -69,14 +64,12 @@ export default function StartPage() {
 
     setLoading(true);
     try {
-      // read encrypted JSON created at signup
+
       const encryptedJson = localStorage.getItem("encryptedWallet");
       if (!encryptedJson) {
         throw new Error("No local encrypted wallet found. Did you create this wallet on this browser?");
       }
 
-      // decrypt locally (ethers Wallet.fromEncryptedJson works for v5/v6)
-      // This is CPU-intensive and async
       const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
 
       const walletAddress = wallet.address || (await wallet.getAddress());
@@ -84,14 +77,11 @@ export default function StartPage() {
         throw new Error("Password does not match the encrypted wallet for this address.");
       }
 
-      // use the decrypted wallet to perform signature login (nonce -> sign -> verify)
       await signInWithWallet(wallet);
 
-      // success
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      // friendly error messages
       const msg = err?.message || "Login failed";
       setError(msg.includes("invalid") ? msg : msg);
     } finally {
