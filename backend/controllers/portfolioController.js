@@ -10,11 +10,10 @@ exports.getPortfolio = async (req, res) => {
   try {
     const userAddr = req.user.address;
 
-    // Collect all coingeckoIds we need
     const ids = new Set();
     for (const [chainKey, cfg] of Object.entries(CHAINS)) {
-      if (cfg.coingeckoId) ids.add(cfg.coingeckoId);
-      cfg.tokens.forEach(t => ids.add(t.coingeckoId));
+      if (cfg.binanceSymbol) ids.add(cfg.binanceSymbol);
+      cfg.tokens.forEach(t => ids.add(t.binanceSymbol));
     }
     const prices = await getPrices([...ids]);
 
@@ -26,9 +25,9 @@ exports.getPortfolio = async (req, res) => {
 
       // Native balance
       const nativeRaw = await provider.getBalance(userAddr);
-      const nativeBal = ethers.utils.formatUnits(nativeRaw, chainCfg.decimals); // ethers v6
-      const nativeUsdPrice = prices[chainCfg.coingeckoId]?.usd || 0;
+      const nativeBal = ethers.utils.formatUnits(nativeRaw, chainCfg.decimals);
 
+      const nativeUsdPrice = prices[chainCfg.binanceSymbol] || 0;
       const nativeUsdValue = parseFloat(nativeBal) * nativeUsdPrice;
       totalUsdValue += nativeUsdValue;
 
@@ -55,7 +54,7 @@ exports.getPortfolio = async (req, res) => {
           ]);
 
           const humanBal = ethers.utils.formatUnits(raw, decimals);
-          const usdPrice = prices[t.coingeckoId]?.usd || 0;
+          const usdPrice = prices[t.binanceSymbol] || 0;
           const usdValue = parseFloat(humanBal) * usdPrice;
           totalUsdValue += usdValue;
 
