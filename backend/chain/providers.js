@@ -6,8 +6,6 @@ const RPC = {
   sepolia:  process.env.RPC_SEPOLIA,
   polygon:  process.env.RPC_POLYGON,
   bsc:      process.env.RPC_BSC,
-  arbitrum: process.env.RPC_ARBITRUM,
-  polygonZkEvm: process.env.RPC_POLYGONZKEVM,
 };
 
 function getProvider(chain) {
