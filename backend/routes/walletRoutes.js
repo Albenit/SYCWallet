@@ -3,6 +3,7 @@ const auth = require('../middleware/authMiddleware');
 const walletController = require('../controllers/walletController');
 const portfolioController = require('../controllers/portfolioController');
 const transactionsController = require('../controllers/transectionController');
+const partialsController = require('../controllers/partialsController');
 
 const router = express.Router();
 
@@ -25,5 +26,7 @@ router.get("/chain/portfolio", auth, portfolioController.getPortfolio);
 // Transactions
 router.get("/save-transactions-history", auth, transactionsController.saveTransactionHistory);
 
+
+router.get('/chain/:chain', partialsController.getChain);
 
 module.exports = router;

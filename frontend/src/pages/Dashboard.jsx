@@ -13,6 +13,8 @@ import TokensTab from "../components/dashboardTabs/TokensTab";
 import SendTab from "../components/dashboardTabs/SendTab";
 import ReceiveTab from "../components/dashboardTabs/ReceiveTab";
 import PasswordModal from "../components/partials/PasswordModal";
+import Swal from "sweetalert2";
+import ERC20_ABI from "../abis/erc20.json";
 
 
 export default function Dashboard() {
@@ -36,30 +38,47 @@ export default function Dashboard() {
     }
   };
 
-  const handleSend = (to, amount, network) => {
-    setSendData({ to, amount, network });
+  const handleSend = (to, amount, network,token) => {
+    setSendData({ to, amount, network, token });
     setPasswordModalOpen(true);
   };
 
   const sendTransaction = async (password) => {
     try {
-      const { to, amount, network } = sendData;
+      const { to, amount, network, token } = sendData; // <-- token comes from SendTab
       const encryptedJson = localStorage.getItem("encryptedWallet");
 
-      if (!encryptedJson) throw new Error("No wallet found in localStorage");
+      if (!encryptedJson) throw new Error("No wallet found");
 
       const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
       const provider = new ethers.JsonRpcProvider(network.rpc);
       const signer = wallet.connect(provider);
 
-      const tx = await signer.sendTransaction({
-        to,
-        value: ethers.parseEther(amount),
+      let tx;
+
+      if (token) {
+        const contract = new ethers.Contract(token.address, ERC20_ABI, signer);
+        const value = ethers.parseUnits(amount, token.decimals);
+        tx = await contract.transfer(to, value);
+      } else {
+        tx = await signer.sendTransaction({
+          to,
+          value: ethers.parseEther(amount),
+        });
+      }
+
+      Swal.fire({
+        title: `Transaction sent successfully!`,
+        text: `Hash: ${tx.hash}`,
+        icon: "success",
+        confirmButtonText: "OK",
+        allowOutsideClick: false,
+        background: "#02010C",
+        color: "#ffffff",
       });
 
-      alert(`Transaction sent on ${network.name}! Hash: ${tx.hash}`);
-
       setPasswordModalOpen(false);
+      setTab("token");
     } catch (err) {
       console.error("Send failed:", err);
 
@@ -68,14 +87,21 @@ export default function Dashboard() {
       if (err.code === "INSUFFICIENT_FUNDS") {
         userMessage = "Insufficient funds to complete this transaction.";
       } else if (err.code === "NETWORK_ERROR") {
-        userMessage = "Network error. Please check your internet or RPC settings.";
+        userMessage = "Network error. Please check your RPC.";
       } else if (err.code === "ACTION_REJECTED") {
-        userMessage = "Transaction was rejected by the user.";
+        userMessage = "Transaction was rejected.";
       } else if (err.info?.error?.message?.includes("gas")) {
         userMessage = "Not enough ETH to cover gas fees.";
       }
 
-      alert(userMessage);
+      Swal.fire({
+        title: "Transaction Failed",
+        text: userMessage,
+        icon: "error",
+        confirmButtonText: "Close",
+        background: "#02010C",
+        color: "#ffffff",
+      });
     }
   };
 

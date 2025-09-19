@@ -30,7 +30,7 @@ export default function TokensTab({ portfolio, portfolioLoading, portfolioError 
                 priceUsd={item?.usdPrice ? item.usdPrice : "0.00"}
                 change={-2.32}
                 balance={item?.balance ? parseFloat(item.balance).toFixed(4) : "0.0000"}
-                usdValue={(item?.usdValue || 0).toFixed(2)}
+                usdValue={(item?.usdValue || 0).toFixed(3)}
               />
             </div>
           </div>
