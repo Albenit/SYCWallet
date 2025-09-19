@@ -81,13 +81,25 @@ export default function StartPage() {
 
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
-      const msg = err?.message || "Login failed";
-      setError(msg.includes("invalid") ? msg : msg);
-    } finally {
-      setLoading(false);
-    }
-  }
+        console.error(err);
+
+        let msg = "Login failed. Please try again.";
+
+        if (err.message.includes("No local encrypted wallet")) {
+          msg ="⚠️ Wallet not found on this browser. Please create or import a wallet first.";
+        } else if (err.message.includes("incorrect password")) {
+          msg = "❌ Incorrect password. Please check and try again.";
+        } else if (err.message.includes("does not match")) {  
+          msg = "⚠️ The address and password you entered do not match.";
+        } else if (err.message.toLowerCase().includes("network")) {
+          msg = "🌐 Network error. Check your internet connection.";
+        }
+
+        setError(msg);
+      }finally {
+          setLoading(false);
+        }
+      }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
