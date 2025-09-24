@@ -22,6 +22,8 @@ router.get("/:chain/account", auth, walletController.getAccountBasic);
 
 // Portfolio (native + tokens)
 router.get("/chain/portfolio", auth, portfolioController.getPortfolio);
+router.get("/all-tokens", auth, portfolioController.getAllTokens);
+router.post("/toggle-token", auth, portfolioController.toggleToken);
 
 // Transactions
 router.get("/save-transactions-history", auth, transactionsController.saveTransactionHistory);
