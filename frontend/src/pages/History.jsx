@@ -51,10 +51,6 @@ export default function History() {
               )}
             </button>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-300 select-none">
-            <img src={networkBadge} alt="network" />
-            <span>Ethereum Mainnet</span>
-          </div>
         </div>
 
         {/* Transaction History Title */}

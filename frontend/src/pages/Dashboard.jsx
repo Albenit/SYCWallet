@@ -20,7 +20,8 @@ export default function Dashboard() {
   const [tab, setTab] = useState("token");
 
   const { address, Addressloading } = useWalletMe();
-  const { portfolio, loading: portfolioLoading, error: portfolioError } = usePortfolio();
+  const { portfolio, loading: portfolioLoading, error: portfolioError, refetchPortfolio } = usePortfolio();
+  
 
   const handleCopy = async () => {
     if (!address) return;
@@ -61,10 +62,6 @@ export default function Dashboard() {
                 )}
               </button>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-300 select-none">
-              <img src={networkBadge} alt="network" />
-              <span>Ethereum Mainnet</span>
-            </div>
           </div>
 
           {/* Balance */}
@@ -97,19 +94,19 @@ export default function Dashboard() {
                 <span>Receive</span>
                 {tab === "receive" && <div className="h-[2px] w-8 bg-blue-500" />}
               </button>
-              <button onClick={() => setTab("swap")} className={`flex flex-col items-center gap-2 text-sm ${tab === "swap" ? "text-white" : "text-gray-400"}`}>
+              {/* <button onClick={() => setTab("swap")} className={`flex flex-col items-center gap-2 text-sm ${tab === "swap" ? "text-white" : "text-gray-400"}`}>
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#151928]">
                   <img src={swapIcon} alt="receive" />
                 </span>
                 <span>Swap</span>
                 {tab === "receive" && <div className="h-[2px] w-8 bg-blue-500" />}
-              </button>
+              </button> */}
             </div>
 
             {/* Tab Content */}
             <div className="mt-8">
               {tab === "send" && <SendTab />}
-              {tab === "token" && (<TokensTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} />)}
+              {tab === "token" && (<TokensTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} refetchPortfolio={refetchPortfolio} />)}
               {tab === "receive" && <ReceiveTab address={address} handleCopy={handleCopy} />}
               {tab === "swap" && <SwapTab />}
             </div>

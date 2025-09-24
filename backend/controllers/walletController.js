@@ -33,7 +33,7 @@ exports.getTokenBalance = async (req, res) => {
         const [raw, decimals, symbol] = await Promise.all([
           contract.balanceOf(req.user.address),
           contract.decimals(),
-          contract.symbol().catch(() => ''), // some tokens fail here
+          contract.symbol().catch(() => ''), 
         ]);
     
         const human = ethers.utils.formatUnits(raw, decimals);

@@ -72,7 +72,7 @@ export default function Settings() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="w-full py-3 rounded-lg bg-gradient-to-r from-[#3B82F6] to-[#1E40AF] hover:opacity-90 transition text-white font-semibold text-lg"
+          className="w-full py-3 rounded-lg bg-gradient-to-r from-[#3B82F6] to-[#1E40AF] hover:opacity-90 transition text-white font-semibold text-lg cursor-pointer"
         >
           Logout
         </button>
