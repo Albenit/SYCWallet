@@ -88,6 +88,7 @@ exports.getPortfolio = async (req, res) => {
 
         return {
           chain: chainCfg.label,
+          chainId: chainCfg.chainId,
           items: chainItems,
         };
       })

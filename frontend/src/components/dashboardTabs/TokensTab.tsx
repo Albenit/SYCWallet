@@ -27,11 +27,11 @@ export default function TokensTab({
 
   const closeModal = () => {
     setIsModalOpen(false);
-    if(hasAnyTokenChanged){
+    if (hasAnyTokenChanged) {
       refetchPortfolio();
       setHasAnyTokenChanged(false);
     }
-  }
+  };
 
   const addRemoveToken = async (chain: string, address: string | null) => {
     try {
@@ -108,13 +108,14 @@ export default function TokensTab({
       {isModalOpen && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
-          onClick={closeModal} 
+          onClick={closeModal}
         >
           <div
-            className="bg-gray-900 text-white p-6 rounded-lg w-[500px] max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()} 
+            className="bg-gray-900 text-white p-6 rounded-lg w-[500px] max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-4">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4 flex-shrink-0">
               <h2 className="text-lg font-semibold">All Tokens</h2>
               <button
                 onClick={closeModal}
@@ -124,38 +125,43 @@ export default function TokensTab({
               </button>
             </div>
 
-            {tokensLoading && <p>Loading tokens…</p>}
-            {tokensError && <p className="text-red-500">{tokensError}</p>}
-            {!tokensLoading &&
-              tokens?.map((chain: any) => (
-                <div key={chain.chain} className="mb-4">
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">
-                    {chain.chainLabel}
-                  </h3>
-                  <div className="space-y-2">
-                    {chain.tokens.map((token: any, idx: number) => (
-                    <div
-                      key={`${chain.chain}-${idx}`}
-                      className="flex items-center justify-between bg-white/5 rounded px-3 py-2"
-                    >
-                      <span>{token.symbol}</span>
+            {/* Scrollable content */}
+            <div className="overflow-y-auto custom-scroll flex-1 pr-2">
+              {tokensLoading && <p>Loading tokens…</p>}
+              {tokensError && <p className="text-red-500">{tokensError}</p>}
+              {!tokensLoading &&
+                tokens?.map((chain: any) => (
+                  <div key={chain.chain} className="mb-4">
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">
+                      {chain.chainLabel}
+                    </h3>
+                    <div className="space-y-2">
+                      {chain.tokens.map((token: any, idx: number) => (
+                        <div
+                          key={`${chain.chain}-${idx}`}
+                          className="flex items-center justify-between bg-white/5 rounded px-3 py-2"
+                        >
+                          <span>{token.symbol}</span>
 
-                      {/* Toggle switch */}
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={token.active}
-                          onChange={() => addRemoveToken(token.chain, token.address)}
-                        />
-                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
-                        <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
-                      </label>
+                          {/* Toggle switch */}
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={token.active}
+                              onChange={() =>
+                                addRemoveToken(token.chain, token.address)
+                              }
+                            />
+                            <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
+                            <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
+                          </label>
+                        </div>
+                      ))}
                     </div>
-                  ))}
                   </div>
-                </div>
-              ))}
+                ))}
+            </div>
           </div>
         </div>
       )}

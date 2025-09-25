@@ -20,13 +20,17 @@ router.get("/:chain/token-balance", auth, walletController.getTokenBalance);
 router.get("/:chain/account", auth, walletController.getAccountBasic);
 
 
+
 // Portfolio (native + tokens)
 router.get("/chain/portfolio", auth, portfolioController.getPortfolio);
 router.get("/all-tokens", auth, portfolioController.getAllTokens);
 router.post("/toggle-token", auth, portfolioController.toggleToken);
 
 // Transactions
-router.get("/save-transactions-history", auth, transactionsController.saveTransactionHistory);
+router.post("/:chain/sendTransaction", auth, transactionsController.sendTransaction);
+router.post("/:chain/estimateGas", auth, transactionsController.estimateGas);
+router.post("/:chain/prepareTx", transactionsController.prepareTx);
+
 
 
 router.get('/chain/:chain', partialsController.getChain);
