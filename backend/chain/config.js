@@ -3,6 +3,7 @@ module.exports = {
     label: "Ethereum",
     nativeSymbol: "ETH",
     decimals: 18,
+    chainId: 1,
     binanceSymbol: "ETHUSDT",
     tokens: [
       { address: "0xdAC17F958D2ee523a2206206994597C13D831ec7", symbol: "USDT", decimals: 6, binanceSymbol: "USDTUSDT" },
@@ -14,9 +15,10 @@ module.exports = {
   },
 
   sepolia: {
-    label: "Ethereum Sepolia",
+    label: "Sepolia",
     nativeSymbol: "ETH",
     decimals: 18,
+    chainId: 11155111,
     binanceSymbol: "ETHUSDT",
     tokens: [
       { address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT" },
@@ -30,6 +32,7 @@ module.exports = {
     label: "Polygon",
     nativeSymbol: "MATIC",
     decimals: 18,
+    chainId: 137,
     binanceSymbol: "MATICUSDT",
     tokens: [
       { address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT" },
@@ -44,6 +47,7 @@ module.exports = {
     label: "BNB Chain",
     nativeSymbol: "BNB",
     decimals: 18,
+    chainId: 56,
     binanceSymbol: "BNBUSDT",
     tokens: [
       { address: "0x55d398326f99059fF775485246999027B3197955", symbol: "USDT", decimals: 18, binanceSymbol: "USDTUSDT" },
@@ -60,6 +64,7 @@ module.exports = {
     label: "Arbitrum",
     nativeSymbol: "ETH",
     decimals: 18,
+    chainId: 42161,
     binanceSymbol: "ETHUSDT",
     tokens: [
       { address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", symbol: "USDT", decimals: 6, binanceSymbol: "USDTUSDT" },
@@ -73,6 +78,7 @@ module.exports = {
     label: "Avalanche",
     nativeSymbol: "AVAX",
     decimals: 18,
+    chainId: 43114,
     binanceSymbol: "AVAXUSDT",
     tokens: [
       { address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT" },
@@ -86,6 +92,7 @@ module.exports = {
     label: "Fantom",
     nativeSymbol: "FTM",
     decimals: 18,
+    chainId: 250,
     binanceSymbol: "FTMUSDT",
     tokens: [
       { address: "0x04068DA6C83AFCFA0e13ba15A6696662335D5B75", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT" },
@@ -98,6 +105,7 @@ module.exports = {
     label: "Gnosis Chain",
     nativeSymbol: "xDAI",
     decimals: 18,
+    chainId: 100,
     binanceSymbol: "DAIUSDT",
     tokens: [
       { address: "0xddafbb505ad214d7b80b1f830fccc89b60fb7a83", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT" },
@@ -109,6 +117,7 @@ module.exports = {
     label: "Base",
     nativeSymbol: "ETH",
     decimals: 18,
+    chainId: 8453,
     binanceSymbol: "ETHUSDT",
     tokens: [
       { address: "0x833589fCD6EDb6E08f4c7C32D4f71b54bdA02913", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT" },
@@ -120,6 +129,7 @@ module.exports = {
     label: "Lumia",
     nativeSymbol: "LUMIA",
     decimals: 18,
+    chainId: 9001,
     binanceSymbol: "LUMIAUSDT",
     tokens: [],
   },
@@ -128,6 +138,7 @@ module.exports = {
     label: "zkSync Era",
     nativeSymbol: "ETH",
     decimals: 18,
+    chainId: 324,
     binanceSymbol: "ETHUSDT",
     tokens: [
       { address: "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT" },

@@ -105,7 +105,7 @@ export default function Dashboard() {
 
             {/* Tab Content */}
             <div className="mt-8">
-              {tab === "send" && <SendTab />}
+              {tab === "send" && (<SendTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} refetchPortfolio={refetchPortfolio} />)}
               {tab === "token" && (<TokensTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} refetchPortfolio={refetchPortfolio} />)}
               {tab === "receive" && <ReceiveTab address={address} handleCopy={handleCopy} />}
               {tab === "swap" && <SwapTab />}
