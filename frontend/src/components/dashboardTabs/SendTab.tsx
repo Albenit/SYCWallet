@@ -5,6 +5,11 @@ import ERC20_ABI from "../../abis/erc20.json";
 import PasswordModal from "../partials/PasswordModal";
 import Row from "../partials/Row";
 import useEstimateGas from "../../hooks/useEstimateGas";
+import usePrepareTx from "../../hooks/usePrepareTx";
+import useSendTransaction from "../../hooks/useSendTransaction";
+import { chainKeyMap } from "../../utils/chainKeyMap";
+import { sendTransactionError  } from "../../utils/errorUtils";
+import { useWallet } from "../../context/WalletContext";
 
 interface SendTabProps {
   portfolio: any;
@@ -13,22 +18,17 @@ interface SendTabProps {
   refetchPortfolio: () => void;
 }
 
-export default function SendTab({
-  portfolio,
-  portfolioLoading,
-  portfolioError,
-  refetchPortfolio,
-}: SendTabProps) {
+export default function SendTab({portfolio,portfolioLoading,portfolioError,refetchPortfolio,}: SendTabProps) {
+
   const [selectedToken, setSelectedToken] = useState<any>(null);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
-  const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
   const [errorTransaction, setErrorTransaction] = useState("");
-  const token = localStorage.getItem("auth_token");
-
+  const { wallet } = useWallet();
+  const { prepareTx } = usePrepareTx();
+  const { sendTransaction: broadcastTx } = useSendTransaction();
   const { estimateGas, feeEstimate } = useEstimateGas();
 
-  // ===== Fee estimation with debounce =====
   useEffect(() => {
     if (!selectedToken || !to || !amount) return;
 
@@ -44,71 +44,46 @@ export default function SendTab({
         from: selectedToken.userAddress,
         amount,
         token: selectedToken.type === "token" ? selectedToken.token : null,
+        decimals: selectedToken.decimals,
       });
     }, 500);
 
     return () => clearTimeout(handler);
   }, [selectedToken, to, amount]);
 
-  // ===== Send transaction =====
-  const sendTransaction = async (password: string) => {
+  const sendTransaction = async () => {
+
     try {
       const encryptedJson = localStorage.getItem("encryptedWallet");
       if (!encryptedJson) throw new Error("No wallet found");
 
-      const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
+      if (!wallet) throw new Error("Wallet is locked");
 
-      // transaction body
       const txData =
         selectedToken.type === "token"
           ? {
               to: selectedToken.token,
-              data: new ethers.Interface(ERC20_ABI).encodeFunctionData("transfer", [
-                to,
-                ethers.parseUnits(amount, selectedToken.decimals || 18),
-              ]),
+              data: new ethers.Interface(ERC20_ABI).encodeFunctionData(
+                "transfer",
+                [to, ethers.parseUnits(amount, selectedToken.decimals || 18)]
+              ),
             }
           : {
               to,
               value: ethers.parseEther(amount),
             };
 
-      // 👉 ask backend to prepare (nonce, gas, fees, chainId)
-      const prepareRes = await fetch(
-        `http://127.0.0.1:5000/api/wallet/${selectedToken.chainKey}/prepareTx`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ from: wallet.address, ...txData }),
-        }
+      const prepared = await prepareTx(
+        selectedToken.chainKey,
+        txData,
+        wallet.address
       );
-      const prepared = await prepareRes.json();
-      if (!prepareRes.ok) throw new Error(prepared.error);
 
-      // merge prepared tx
       const fullTx = { ...txData, ...prepared };
 
-      // sign properly
       const signedTx = await wallet.signTransaction(fullTx);
 
-      // broadcast
-      const res = await fetch(
-        `http://127.0.0.1:5000/api/wallet/${selectedToken.chainKey}/sendTransaction`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ signedTx }),
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await broadcastTx(selectedToken.chainKey, signedTx);
 
       Swal.fire({
         title: "Transaction Sent",
@@ -118,7 +93,6 @@ export default function SendTab({
         color: "#ffffff",
       });
 
-      setPasswordModalOpen(false);
       setAmount("");
       setTo("");
       setSelectedToken(null);
@@ -126,7 +100,7 @@ export default function SendTab({
     } catch (err: any) {
       Swal.fire({
         title: "Transaction Failed",
-        text: err.message || "Something went wrong",
+        text: sendTransactionError(err), 
         icon: "error",
         background: "#02010C",
         color: "#ffffff",
@@ -134,7 +108,6 @@ export default function SendTab({
     }
   };
 
-  // ===== Balance check =====
   useEffect(() => {
     if (selectedToken && amount) {
       const userBalance = parseFloat(selectedToken.balance || "0");
@@ -150,51 +123,58 @@ export default function SendTab({
     }
   }, [amount, selectedToken]);
 
+  const handleSendClick = () => {
+    
+    if (!to || !amount) {
+      setErrorTransaction("Both recipient address and amount are required");
+      return;
+    }
+    sendTransaction();
+  };  
+
   return (
     <div className="space-y-4">
-      {/* Step 1: Show portfolio tokens */}
       {!selectedToken && (
         <>
-          {portfolioLoading && <p className="text-gray-400 text-sm">Loading portfolio…</p>}
-          {portfolioError && <p className="text-red-500 text-sm">{portfolioError}</p>}
+          {portfolioLoading && (
+            <p className="text-gray-400 text-sm">Loading portfolio…</p>
+          )}
+          {portfolioError && (
+            <p className="text-red-500 text-sm">{portfolioError}</p>
+          )}
 
           <div className="space-y-3">
             {portfolio?.portfolio?.map((chain: any) =>
               chain.items?.map((item: any, idx: number) => (
                 <div
                   key={`${chain.chain}-${idx}`}
-                  className="px-4 rounded cursor-pointer hover:bg-white/10"
+                  className="px-2 rounded cursor-pointer hover:bg-white/2"
                   onClick={() =>
                     setSelectedToken({
                       ...item,
-                      chainKey:
-                        chain.key?.toLowerCase() || chain.chain.toLowerCase().replace(/\s+/g, "-"),
+                      chainKey: chainKeyMap[chain.chain] || chain.chain.toLowerCase().replace(/\s+/g, "-"),
                       chainLabel: chain.chain,
                       type: item.type,
                       token: item.token,
                       decimals: item.decimals || 18,
                       chainNativeSymbol: chain.nativeSymbol,
-                      balance: item?.balance ? parseFloat(item.balance).toFixed(4) : "0.0000",
+                      balance: item?.balance
+                        ? parseFloat(item.balance).toFixed(4)
+                        : "0.0000",
                       userAddress: portfolio.address,
-                      chainId: chain.chainId, // ✅ ensure chainId comes from backend CHAINS
+                      chainId: chain.chainId,
                     })
                   }
                 >
                   <Row
-                    icon={
-                      <div className="h-9 w-9 rounded-full bg-white/10 ring-1 ring-white/10 flex items-center justify-center">
-                        <svg viewBox="0 0 256 417" className="h-5 w-5" aria-hidden>
-                          <polygon fill="#a3bffa" points="127.9,0 0,213.7 127.9,282.6 255.8,213.7" />
-                          <polygon fill="#94a3b8" points="127.9,416.3 255.8,246.3 127.9,315.3 0,246.3" />
-                        </svg>
-                      </div>
-                    }
+                    icon={item?.logo}
                     chain={chain.chain}
                     symbol={item?.symbol || "UNKNOWN"}
-                    priceUsd={item?.usdPrice ? item.usdPrice : "0.00"}
-                    change={-2.32}
-                    balance={item?.balance ? parseFloat(item.balance).toFixed(4) : "0.0000"}
-                    usdValue={(item?.usdValue || 0).toFixed(3)}
+                    balance={
+                      item?.balance
+                        ? parseFloat(item.balance).toFixed(4)
+                        : "0.0000"
+                    }
                   />
                 </div>
               ))
@@ -207,8 +187,15 @@ export default function SendTab({
       {selectedToken && (
         <>
           <div className="text-center rounded mb-4">
-            <p className="text-xl font-semibold text-white-400">Send {selectedToken.symbol}</p>
-            <p className="text-grey-400">on {selectedToken.chainLabel} Network</p>
+            <p className="text-xl font-semibold text-white-400">
+              Send {selectedToken.symbol}
+            </p>
+            <div className="flex justify-center my-2">
+              <img src={selectedToken.logo} alt="" width={40} height={40} />
+            </div>
+            <p className="text-grey-400">
+              on {selectedToken.chainLabel} Network
+            </p>
           </div>
 
           <input
@@ -216,57 +203,47 @@ export default function SendTab({
             placeholder="Recipient Address"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="w-full rounded-md bg-[#151928] px-4 py-3 text-sm text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+            className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white text-[12px] focus:outline-none"/>
 
-          <input
-            type="number"
-            placeholder={`Amount in ${selectedToken.symbol}`}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full rounded-md bg-[#151928] px-4 py-3 text-sm text-white border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <div className="relative w-full mb-1">
+            <input
+              type="number"
+              placeholder={`Amount in ${selectedToken.symbol}`}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full rounded-md bg-[#02080E8C] px-4 py-3 pr-14 text-sm text-[12px] text-white focus:outline-none"/>
 
-          {errorTransaction && <p className="text-red-500 text-sm mb-0">{errorTransaction}</p>}
+            <button
+              type="button"
+              onClick={() => setAmount(selectedToken.balance)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-white cursor-pointer">
+              MAX
+            </button>
+          </div>
+
+          {errorTransaction && (
+            <p className="text-red-500 text-sm mb-0">{errorTransaction}</p>
+          )}
 
           <div className="flex justify-between items-center">
-            <p className="text-sm">Balance: {selectedToken.balance}</p>
+            <p className="text-sm text-[#EFEFEF7A]">Balance: {selectedToken.balance}</p>
             {feeEstimate && (
-              <p className="text-gray-300 text-sm">
+              <p className="text-[#EFEFEF7A] text-sm">
                 Fee: <b>{feeEstimate}</b>
               </p>
             )}
           </div>
 
           <div className="flex gap-3">
-            <button
-              onClick={() => setSelectedToken(null)}
-              className="w-1/2 rounded-md py-3 font-semibold transition bg-gray-700 hover:bg-gray-600"
-            >
-              Back
-            </button>
-            <button
-              onClick={() => setPasswordModalOpen(true)}
-              disabled={!to || !amount || parseFloat(amount) > parseFloat(selectedToken?.balance || "0")}
-              className={`w-1/2 rounded-md py-3 font-semibold transition 
-              ${
-                !to || !amount || parseFloat(amount) > parseFloat(selectedToken?.balance || "0")
-                  ? "bg-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
+            <button 
+              onClick={handleSendClick}
+              className="w-full rounded-full py-3 transition bg-blue-600 hover:bg-blue-700 cursor-pointer font-[700]"
             >
               Send
             </button>
           </div>
         </>
       )}
-
-      {/* Password modal */}
-      <PasswordModal
-        isOpen={isPasswordModalOpen}
-        onClose={() => setPasswordModalOpen(false)}
-        onSubmit={sendTransaction}
-      />
     </div>
   );
 }

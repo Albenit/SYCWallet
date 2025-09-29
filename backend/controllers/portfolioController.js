@@ -20,9 +20,6 @@ exports.getPortfolio = async (req, res) => {
 
     const selectedTokens = await UserToken.find({ user: user._id }).lean();
 
-    const ids = [...new Set(selectedTokens.map((t) => t.binanceSymbol))];
-    const prices = await getPrices(ids);
-
     const portfolio = await Promise.all(
       Object.entries(CHAINS).map(async ([chainKey, chainCfg]) => {
         const provider = getProvider(chainKey);
@@ -42,16 +39,14 @@ exports.getPortfolio = async (req, res) => {
                   chainCfg.decimals
                 );
 
-                const usdPrice = prices[t.binanceSymbol] || 0;
-                const usdValue = parseFloat(nativeBal) * usdPrice;
-
                 return {
                   type: "native",
                   symbol: t.symbol || chainCfg.nativeSymbol,
                   balance_raw: nativeRaw.toString(),
                   balance: nativeBal,
-                  usdPrice,
-                  usdValue,
+                  decimals: t.decimals || chainCfg.decimals,
+                  binanceSymbol: t.binanceSymbol || null, 
+                  logo: chainCfg.logo
                 };
               } else {
                 const tokenAddr = t.tokenAddress.toLowerCase();
@@ -63,8 +58,9 @@ exports.getPortfolio = async (req, res) => {
                 const raw = await contract.balanceOf(userAddr);
                 const humanBal = ethers.utils.formatUnits(raw, t.decimals);
 
-                const usdPrice = prices[t.binanceSymbol] || 0;
-                const usdValue = parseFloat(humanBal) * usdPrice;
+                const tokenMeta = chainCfg.tokens.find(
+                  (tk) => tk.address.toLowerCase() === tokenAddr
+                );
 
                 return {
                   type: "token",
@@ -72,8 +68,9 @@ exports.getPortfolio = async (req, res) => {
                   token: tokenAddr,
                   balance_raw: raw.toString(),
                   balance: humanBal,
-                  usdPrice,
-                  usdValue,
+                  decimals: t.decimals,
+                  binanceSymbol: t.binanceSymbol || null, 
+                  logo: tokenMeta ? tokenMeta.logo : null
                 };
               }
             } catch (err) {
@@ -95,21 +92,16 @@ exports.getPortfolio = async (req, res) => {
     );
 
     const filteredPortfolio = portfolio.filter(Boolean);
-    const totalUsdValue = filteredPortfolio
-      .flatMap((c) => c.items)
-      .reduce((sum, i) => sum + (i.usdValue || 0), 0);
 
     res.json({
       address: userAddr,
       portfolio: filteredPortfolio,
-      totalUsdValue: totalUsdValue.toFixed(2),
     });
   } catch (e) {
     console.error("getPortfolio error:", e);
     res.status(400).json({ error: e.message || "failed" });
   }
 };
-
 
 exports.getAllTokens = async (req, res) => {
   try {

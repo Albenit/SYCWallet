@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
+import PageLayout from "../components/layouts/PageLayout";
+import Steps from "../components/Steps";
 
 export default function CreateNewPassword() {
   const [password, setPassword] = useState("");
@@ -12,7 +14,6 @@ export default function CreateNewPassword() {
   const navigate = useNavigate();
 
   const handleNext = async () => {
-    // Basic checks
     if (password !== confirmPassword) {
       alert("Passwords do not match!");
       return;
@@ -28,9 +29,8 @@ export default function CreateNewPassword() {
       return;
     }
 
-    // Create wallet + encrypt with the provided password
     const wallet = ethers.Wallet.createRandom();
-    const phrase = wallet.mnemonic?.phrase;     
+    const phrase = wallet.mnemonic?.phrase;
 
     if (!phrase) {
       alert("Could not generate a recovery phrase. Please try again.");
@@ -43,7 +43,6 @@ export default function CreateNewPassword() {
 
     sessionStorage.setItem("tmp_secret_phrase", phrase);
 
-    // Navigate and pass phrase in memory state
     navigate("/secret-phrases", {
       state: { phrase, address: wallet.address },
       replace: true,
@@ -51,44 +50,22 @@ export default function CreateNewPassword() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
-      <div className="p-8 rounded-[8px] max-w-xl w-full border border-gray-700 bg-[#0A0A1A]">
+    <PageLayout>
+      <div className="p-5 p-sm-8">
         <h2 className="text-center text-2xl font-semibold mb-6 text-white">Create New Wallet</h2>
-        <div className="flex items-center justify-center  mb-8">
-            <div className="flex flex-col items-center">
-                <div className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-blue-500 text-blue-500">
-                1
-                </div>
-                <span className="text-blue-400 text-sm mt-2">Set Password</span>
-            </div>
-
-            <div className="w-12 h-[1px] bg-gray-600"></div>
-            <div className="flex flex-col items-center">
-                <div className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-500 text-gray-400">
-                2
-                </div>
-                <span className="text-gray-400 text-sm mt-2">Secure Wallet</span>
-            </div>
-            <div className="w-12 h-[1px] bg-gray-600"></div>
-            <div className="flex flex-col items-center">
-                <div className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-500 text-gray-400">
-                3
-                </div>
-                <span className="text-gray-400 text-sm mt-2">Confirm Security<br/>Recovery Phrase</span>
-            </div>
-        </div>
-        <p className="text-gray-400 text-sm mb-6">
+        <Steps selected={1}/>
+        <p className="text-[#EFEFEF7A] text-sm text-center mb-6">
           This password is used to protect your wallet and provide access to the browser extension.
         </p>
 
         <div className="mb-4 text-left">
-          <label className="block text-sm mb-2">New Password</label>
+          <label className="block text-[16px] font-[700] mb-2">New Password</label>
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 rounded bg-[#12122A] border border-gray-700 focus:outline-none"
+              className="w-full p-3 rounded bg-[#02080E8C]   focus:outline-none"
             />
             <button
               type="button"
@@ -99,24 +76,22 @@ export default function CreateNewPassword() {
             </button>
           </div>
 
-          {/* Password Rules */}
           <ul className="text-xs text-gray-400 mt-3 space-y-1">
-            <li className={password.length >= 8 ? "text-green-400" : ""}>• 8 or more characters</li>
-            <li className={/[A-Z]/.test(password) ? "text-green-400" : ""}>• At least one upper case character</li>
-            <li className={/\d/.test(password) ? "text-green-400" : ""}>• At least one digit</li>
-            <li className={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? "text-green-400" : ""}>• At least one symbol</li>
+            <li className={password.length >= 8 ? "text-green-400" : "text-[#EFEFEF7A]"}>• 8 or more characters</li>
+            <li className={/[A-Z]/.test(password) ? "text-green-400" : "text-[#EFEFEF7A]"}>• At least one upper case character</li>
+            <li className={/\d/.test(password) ? "text-green-400" : "text-[#EFEFEF7A]"}>• At least one digit</li>
+            <li className={/[!@#$%^&*(),.?":{}|<>]/.test(password) ? "text-green-400" : "text-[#EFEFEF7A]"}>• At least one symbol</li>
           </ul>
         </div>
 
-        {/* Confirm Password */}
         <div className="mb-6 text-left">
-          <label className="block text-sm mb-2">Confirm New Password</label>
+          <label className="block text-[16px] font-[700] mb-2">Confirm New Password</label>
           <div className="relative">
             <input
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-3 rounded bg-[#12122A] border border-gray-700 focus:outline-none"
+              className="w-full p-3 rounded bg-[#02080E8C] focus:outline-none"
             />
             <button
               type="button"
@@ -128,8 +103,7 @@ export default function CreateNewPassword() {
           </div>
         </div>
 
-        {/* Terms */}
-        <div className="text-sm text-gray-400 mb-6 text-left">
+        <div className="text-[15px] text-gray-400 mb-6 text-center">
           I have read and agree to the{" "}
           <a href="#" className="text-blue-400 underline">
             Terms of Service
@@ -137,12 +111,11 @@ export default function CreateNewPassword() {
           .
         </div>
 
-        {/* Buttons */}
-        <div className="flex justify-between">
-          <button className="px-6 py-2 cursor-pointer" onClick={() => navigate("/signup")}>Back</button>
-          <button className="px-6 py-2 rounded bg-blue-600 hover:bg-blue-500 cursor-pointer" onClick={() => handleNext()}>Next</button>
+        <div className="flex justify-between w-full">
+          <button className="px-6 py-2 cursor-pointer w-full font-[700]" onClick={() => navigate("/signup")}>Back</button>
+          <button className="px-6 py-2 rounded bg-gradient-to-r from-[#3045FFCF] to-[#3045FF] hover:bg-blue-500 cursor-pointer w-full font-[700]" onClick={() => handleNext()}>Next</button>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

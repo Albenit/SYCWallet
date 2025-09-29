@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import sycLogo from '../assets/syclogo.png';
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
+import PageLayout from "../components/layouts/PageLayout";
+import { useWallet } from "../context/WalletContext";
 
 export default function StartPage() {
   const navigate = useNavigate();
+  const { setWallet } = useWallet();
   const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
 
   const API = "http://127.0.0.1:5000"; 
 
@@ -77,6 +81,8 @@ export default function StartPage() {
         throw new Error("Password does not match the encrypted wallet for this address.");
       }
 
+      setWallet(wallet);
+      
       await signInWithWallet(wallet);
 
       navigate("/dashboard");
@@ -102,62 +108,62 @@ export default function StartPage() {
       }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
-      <div className="p-8 rounded-[8px] max-w-xl w-full border border-gray-700 bg-[#0A0A1A]">
-        <div className="flex flex-col items-center mb-6">
-          <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
-        </div>
-        <div className="text-center mb-6">
-          <span className="text-[23px]">Secure and Trusted SYC Wallet</span>
-        </div>
-
-        <form className="space-y-4" onSubmit={handleLogin}>
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">Wallet Address</label>
-            <input
-              type="text"
-              placeholder="0x..."
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="w-full rounded-md bg-[#151928] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+    <PageLayout>
+      <div className="p-5 p-sm-8">
+          <div className="flex flex-col items-center mb-6">
+            <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
           </div>
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">Password</label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md bg-[#151928] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div className="text-center mb-6">
+            <span className="text-[23px]">Secure and Trusted SYC Wallet</span>
           </div>
 
-          {error && <div className="text-red-400 text-sm">{error}</div>}
+          <form className="space-y-4" onSubmit={handleLogin}>
+            <div>
+              <label className="block mb-1 text-sm text-gray-300">Wallet Address</label>
+              <input
+                type="text"
+                placeholder="0x..."
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm text-gray-300">Password</label>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-60"
-          >
-            {loading ? "Logging in…" : "Login"}
-          </button>
-        </form>
+            {error && <div className="text-red-400 text-sm">{error}</div>}
 
-        <p className="text-center text-sm text-gray-400 mt-4">
-          Don't have an account?{" "}
-          <span
-            onClick={() => navigate("/signup")}
-            className="text-blue-500 cursor-pointer hover:underline"
-          >
-            Sign Up
-          </span>
-        </p>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-md bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-60 cursor-pointer"
+            >
+              {loading ? "Logging in…" : "Login"}
+            </button>
+          </form>
 
-        <p className="text-center text-sm text-gray-400 mt-4 cursor-pointer" onClick={() => navigate("/import-wallet")}>
-         Import Existing Wallet?
-        </p>
+          <p className="text-center text-sm text-gray-400 mt-4">
+            Don't have an account?{" "}
+            <span
+              onClick={() => navigate("/signup")}
+              className="text-blue-500 cursor-pointer hover:underline"
+            >
+              Sign Up
+            </span>
+          </p>
+
+          <p className="text-center text-sm text-gray-400 mt-4 cursor-pointer" onClick={() => navigate("/import-wallet")}>
+          Import Existing Wallet?
+          </p>
       </div>
-    </div>
+    </PageLayout>
   );
 }
