@@ -5,7 +5,7 @@ export default function useEstimateGas() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const estimateGas = useCallback(async ({ chainKey, to, from, amount, token }) => {
+  const estimateGas = useCallback(async ({ chainKey, to, from, amount, token, decimals }) => {
     const authToken = localStorage.getItem("auth_token");
     if (!authToken) {
       setError("No auth token found");
@@ -30,6 +30,7 @@ export default function useEstimateGas() {
             from,
             amount,
             token: token || null,
+            decimals
           }),
         }
       );

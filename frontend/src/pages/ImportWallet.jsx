@@ -3,23 +3,26 @@ import React, { useState } from "react";
 import sycLogo from "../assets/syclogo.png";
 import { useNavigate } from "react-router-dom";
 import { Wallet } from "ethers";
+import PageLayout from "../components/layouts/PageLayout";
+import { useWallet } from "../context/WalletContext";
 
-const API = "http://127.0.0.1:5000"; // adjust for prod
+const API = "http://127.0.0.1:5000"; 
 
-export default function ImportWallet({ onImport /* optional callback (type, value) => void */ }) {
-  const [tab, setTab] = useState("private"); // "private" | "seed"
+export default function ImportWallet({ onImport  }) {
+  const [tab, setTab] = useState("private"); 
   const [value, setValue] = useState("");
-  const [password, setPassword] = useState(""); // used to encrypt JSON locally
+  const [password, setPassword] = useState(""); 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { setWallet } = useWallet();
+
 
   const placeholder =
     tab === "private"
       ? "Enter your private key here"
       : "Enter your 12/24 - word seed phrase here";
 
-  // helper: sign-in with wallet instance (nonce -> sign -> verify)
   async function signInWithWalletInstance(walletInstance) {
     const addr = (walletInstance.address || (await walletInstance.getAddress())).toLowerCase();
 
@@ -61,10 +64,6 @@ export default function ImportWallet({ onImport /* optional callback (type, valu
       setError("Both the key/phrase and an encryption password are required.");
       return;
     }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
 
     setLoading(true);
     try {
@@ -82,19 +81,16 @@ export default function ImportWallet({ onImport /* optional callback (type, valu
         if (words.length < 12) {
           throw new Error("Seed phrase too short — expected 12 or 24 words.");
         }
-
-        try {
-          wallet = Wallet.fromMnemonic ? Wallet.fromMnemonic(phrase) : Wallet.fromPhrase(phrase);
-        } catch (err) {
-          throw new Error("Invalid seed phrase. Check spelling and order.");
-        }
+        wallet = Wallet.fromPhrase(phrase); 
       }
 
-      const address = (wallet.address || (await wallet.getAddress())).toLowerCase();
+      const address = wallet.address.toLowerCase();
 
       const encryptedJson = await wallet.encrypt(password);
       localStorage.setItem("encryptedWallet", encryptedJson);
       localStorage.setItem("wallet_address", address);
+
+      setWallet(wallet);
 
       await signInWithWalletInstance(wallet);
 
@@ -110,8 +106,8 @@ export default function ImportWallet({ onImport /* optional callback (type, valu
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white px-4">
-      <div className="p-8 rounded-[8px] max-w-xl w-full border border-gray-700 bg-[#0A0A1A]">
+    <PageLayout>
+      <div className="px-6 pt-6">
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
@@ -160,7 +156,7 @@ export default function ImportWallet({ onImport /* optional callback (type, valu
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder={placeholder}
-            className="w-full h-30 md:h-30 bg-black/60 backdrop-blur-sm border border-gray-800 rounded-md p-4 text-gray-200 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            className="w-full h-30 md:h-30 bg-[#02080E8C] backdrop-blur-sm  rounded-md p-4 text-gray-200 placeholder:text-gray-400 resize-none focus:outline-none transition"
             aria-label={tab === "private" ? "Private Key input" : "Seed Phrase input"}
             spellCheck={false}
           />
@@ -173,7 +169,7 @@ export default function ImportWallet({ onImport /* optional callback (type, valu
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Choose a strong password (min 8 chars)"
-              className="w-full bg-black/60 border border-gray-800 rounded-md p-3 text-gray-200 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#02080E8C] rounded-md p-3 text-gray-200 placeholder:text-gray-400 focus:outline-none  "
             />
             <p className="text-xs text-gray-400 mt-2">
               This password encrypts the wallet JSON stored in your browser. Keep it safe — it cannot be recovered without your seed phrase.
@@ -192,13 +188,13 @@ export default function ImportWallet({ onImport /* optional callback (type, valu
             </button>
           </div>
 
-          <div className="mt-4 text-center">
+          <div className="my-4 text-center">
             <a onClick={() => navigate("/")} className="text-gray-300/80 hover:text-white cursor-pointer">
               Back to login
             </a>
           </div>
         </form>
       </div>
-    </div>
+    </PageLayout>
   );
 }

@@ -4,15 +4,15 @@ export default function Row({
   icon,
   symbol,
   chain = "Ethereum",
-  priceUsd,
-  change,
-  balance = 0,
-  usdValue,
+  priceUsd = null,
+  change = null,
+  balance,
+  usdValue = null,
 }) {
   return (
     <div className="flex items-center justify-between py-4">
       <div className="flex items-center gap-3">
-        {icon}
+        <img src={icon} alt="" className="flex-none" width={35} height={35} />
         <div>
           <div className="flex items-center gap-2">
             <span className="font-semibold tracking-wide">{symbol}</span>
@@ -21,16 +21,20 @@ export default function Row({
             </span>
           </div>
           <div className="mt-1 flex items-center gap-2 text-xs text-gray-300">
-            <span>${Number(priceUsd).toLocaleString()}</span>
-            <span
-              className={
-                change < 0 ? "text-[#f87171]" : "text-[#22c55e]"
-              }
-            >
-              {change > 0
-                ? `+${change.toFixed(2)}%`
-                : `${change.toFixed(2)}%`}
-            </span>
+            {priceUsd && (
+              <span>${Number(priceUsd).toLocaleString()}</span>
+            )}
+            {change && (
+              <span
+                className={
+                  change < 0 ? "text-[#f87171]" : "text-[#22c55e]"
+                }
+              >
+                {change > 0
+                  ? `+${change.toFixed(2)}%`
+                  : `${change.toFixed(2)}%`}
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -39,7 +43,9 @@ export default function Row({
         <div className="text-2xl font-semibold tracking-tight">
           {balance}
         </div>
-        <div className="text-xs text-gray-400">${usdValue}</div>
+        {usdValue && (
+          <div className="text-xs text-gray-400">${usdValue}</div>
+        )}
       </div>
     </div>
   );

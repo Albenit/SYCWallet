@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 const useAllTokens = () => {
   const [tokens, setTokens] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchTokens = async () => {
+  const fetchTokens = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -19,16 +19,19 @@ const useAllTokens = () => {
         },
       });
 
-      if (!res.ok) throw new Error("Failed to fetch tokens");
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Failed to fetch tokens");
+      }
 
       const data = await res.json();
       setTokens(data);
     } catch (e) {
-      setError(e.message);
+      setError(e.message || "Unexpected error");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { tokens, loading, error, fetchTokens };
 };

@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Clock, Settings } from "lucide-react";
-
+import navHome from "../assets/svg/navHome.svg"
+import navHistory from "../assets/svg/navHistory.svg"
+import navSettings from "../assets/svg/navSettings.svg"
 export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -8,46 +9,38 @@ export default function BottomNav() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="mt-6 rounded-b-xl bg-gradient-to-t from-[#0A0F17] to-[#0A0A1A] px-6 py-4">
-      <div className="grid grid-cols-3 gap-2 text-center text-xs text-gray-300">
-        {/* Home */}
+    <div className="mt-6 rounded-b-xl bg-[#02080E8C] px-6 py-2 rounded-t-4xl">
+      <div className="grid grid-cols-3  text-center text-xs text-gray-300 max-w-[280px] mx-auto">
         <div
-          className="flex flex-col items-center gap-2 cursor-pointer"
+          className="flex flex-col items-center cursor-pointer"
           onClick={() => navigate("/dashboard")}
         >
           <div
             className={`flex h-9 w-9 items-center justify-center rounded-2xl`}
           >
-            <Home size={18} />
+            <img src={navHome} alt="" />
           </div>
           <span className={isActive("/dashboard") ? "text-blue-400" : ""}>
             Home
           </span>
         </div>
 
-        {/* History */}
-        <div className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => navigate("/history")}>
+        <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate("/history")}>
           <div
             className={`flex h-9 w-9 items-center justify-center rounded-2xl`}
           >
-            <Clock size={18} />
+            <img src={navHistory} alt="" />
           </div>
           <span className={isActive("/history") ? "text-blue-400" : ""}>
             History
           </span>
         </div>
 
-        {/* Settings */}
-        <div
-          className="flex flex-col items-center gap-2 cursor-pointer"
-          onClick={() => navigate("/settings")}
-        >
-          <div
-            className={`flex h-9 w-9 items-center justify-center rounded-2xl`}
-          >
-            <Settings size={18} />
+        <div className="flex flex-col items-center cursor-pointer" onClick={() => navigate("/settings")}>
+          <div className={`flex h-9 w-9 items-center justify-center rounded-2xl`}>
+            <img src={navSettings} alt="" />
           </div>
-          <span className={isActive("/settings") ? "text-blue-400" : ""}>
+          <span  className={isActive("/settings") ? "text-blue-400" : ""}>
             Settings
           </span>
         </div>

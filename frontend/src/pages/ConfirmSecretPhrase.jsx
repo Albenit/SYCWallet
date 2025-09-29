@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Wallet } from "ethers"; // v6
+import Steps from "../components/Steps";
+import PageLayout from "../components/layouts/PageLayout";
 
 export default function ConfirmSecretPhrase() {
   const navigate = useNavigate();
@@ -54,7 +56,7 @@ export default function ConfirmSecretPhrase() {
     setSubmitting(true);
     try {
       const wallet = Wallet.fromPhrase(typed);
-      const address = wallet.address; 
+      const address = wallet.address;
 
       const nonceRes = await fetch(`${API}/api/auth/nonce`, {
         method: "POST",
@@ -86,11 +88,11 @@ export default function ConfirmSecretPhrase() {
 
       try {
         sessionStorage.removeItem("tmp_secret_phrase");
-      } catch {}
+      } catch { }
       const verifyData = await verifyRes.json()
 
       localStorage.setItem("auth_token", verifyData.token);
-      
+
       setInput("");
 
       navigate("/dashboard");
@@ -102,36 +104,20 @@ export default function ConfirmSecretPhrase() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-[#02010C] to-[#030313] text-white">
-      <div className="p-8 rounded-[8px] max-w-xl w-full border border-gray-700 bg-[#0A0A1A]">
-        <div className="flex items-center justify-center mb-8">
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-gray-500 text-gray-400">1</div>
-            <span className="text-gray-400 text-sm mt-2">Set Password</span>
-          </div>
-          <div className="w-12 h-[1px] bg-gray-600"></div>
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 flex items-center justify-center rounded-full border border-gray-500 text-gray-400">2</div>
-            <span className="text-gray-400 text-sm mt-2">Secure Wallet</span>
-          </div>
-          <div className="w-12 h-[1px] bg-gray-600"></div>
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 flex items-center justify-center rounded-full border border-blue-500 text-blue-500">3</div>
-            <span className="text-blue-400 text-sm mt-2 text-center">Confirm Security<br/>Recovery Phrase</span>
-          </div>
-        </div>
-
+    <PageLayout>
+      <div className="p-5 p-sm-8">
+        <Steps selected={3} />
         <div className="text-[22px] font-bold mb-2 text-center">Confirm Your Secret Phrase</div>
-        <p className="text-gray-400 text-sm mb-6 text-center">
+        <p className="text-[#EFEFEF7A] text-sm mb-6 text-center">
           Please type each word in the correct order to verify you have saved your Secret Phrase.
         </p>
 
-        <div className="mb-4 text-left">
+        <div className="mb-8 text-left">
           <label className="block text-sm mb-2">Phrase</label>
           <div className="relative">
             <input
               type="text"
-              className="w-full p-3 rounded bg-[#12122A] border border-gray-700 focus:outline-none"
+              className="w-full p-3 rounded bg-[#02080E8C]  focus:outline-none"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={expectedWords ? `Enter your ${expectedWords}-word phrase` : "Enter your phrase"}
@@ -143,15 +129,15 @@ export default function ConfirmSecretPhrase() {
 
         <div className="flex justify-between mt-[30px]">
           <button
-            className="px-6 py-2 w-md rounded text-gray-200 cursor-pointer disabled:opacity-50"
+            className="px-6 py-2 w-md rounded text-gray-200 font-[700] cursor-pointer disabled:opacity-50"
             onClick={() => navigate("/signup")}
             disabled={submitting}
           >
-            Back
+            Cancel
           </button>
 
           <button
-            className="px-6 py-2 w-md rounded bg-blue-600 hover:bg-blue-500 disabled:opacity-50 cursor-pointer"
+            className="px-6 py-2 w-md rounded  bg-gradient-to-r from-[#3045FFCF] to-[#3045FF] hover:bg-blue-500 disabled:opacity-50 cursor-pointer font-[700]"
             onClick={handleNext}
             disabled={!input.trim() || submitting}
           >
@@ -159,6 +145,6 @@ export default function ConfirmSecretPhrase() {
           </button>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }
