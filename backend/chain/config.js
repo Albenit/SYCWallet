@@ -134,15 +134,6 @@ module.exports = {
     ],
   },
 
-  lumia: {
-    label: "Lumia",
-    nativeSymbol: "LUMIA",
-    decimals: 18,
-    chainId: 9001,
-    binanceSymbol: "LUMIAUSDT",
-    logo: "https://dummyimage.com/64x64/000/fff?text=LUMIA", // fixed dummy image format
-    tokens: [],
-  },
 
   zksync: {
     label: "zkSync Era",

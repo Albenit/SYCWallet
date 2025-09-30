@@ -12,6 +12,7 @@
   "dependencies": {
     "@fontsource/montserrat": "^5.2.7",
     "@tailwindcss/vite": "^4.1.13",
+    "alchemy-sdk": "^3.6.4",
     "axios": "^1.12.0",
     "crypto-js": "^4.2.0",
     "ethers": "^6.15.0",

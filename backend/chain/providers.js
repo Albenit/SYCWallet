@@ -9,8 +9,7 @@ const RPC = {
   avalanche: process.env.RPC_AVALANCHE,  
   fantom:    process.env.RPC_FANTOM,     
   gnosis:    process.env.RPC_GNOSIS,     
-  base:      process.env.RPC_BASE,       
-  lumia:     process.env.RPC_LUMIA,      
+  base:      process.env.RPC_BASE,     
   zksync:    process.env.RPC_ZKSYNC,
 };
 
