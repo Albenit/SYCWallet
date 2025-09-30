@@ -10,10 +10,8 @@ import Settings from "./pages/Settings";
 import Signup from "./pages/Signup";
 import ImportWallet from "./pages/ImportWallet";
 import History from "./pages/History";
-import { WalletProvider } from "./context/WalletContext";
 function App() {
   return (
-    <WalletProvider>
       <Router>
         <Routes>
           <Route path="/" element={<StartPage />} />
@@ -53,7 +51,6 @@ function App() {
         </Routes>
 
       </Router>
-    </WalletProvider>
   );
 }
 

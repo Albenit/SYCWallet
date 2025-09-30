@@ -24,9 +24,9 @@ const PageLayout: FC<PropsWithChildren> = ({ children }) => {
               width="1281.75"
               height="1285.06"
               filterUnits="userSpaceOnUse"
-              color-interpolation-filters="sRGB"
+              colorInterpolationFilters="sRGB"
             >
-              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feFlood floodOpacity="0" result="BackgroundImageFix" />
               <feBlend
                 mode="normal"
                 in="SourceGraphic"
@@ -46,15 +46,15 @@ const PageLayout: FC<PropsWithChildren> = ({ children }) => {
               y2="595.559"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#2434C4" stop-opacity="0.2" />
-              <stop offset="0.188987" stop-color="#6745CE" />
-              <stop offset="0.435174" stop-color="#2434C4" stop-opacity="0.8" />
+              <stop stopColor="#2434C4" stopOpacity="0.2" />
+              <stop offset="0.188987" stopColor="#6745CE" />
+              <stop offset="0.435174" stopColor="#2434C4" stopOpacity="0.8" />
               <stop
                 offset="0.579682"
-                stop-color="#2130B4"
-                stop-opacity="0.819019"
+                stopColor="#2130B4"
+                stopOpacity="0.819019"
               />
-              <stop offset="1" stop-color="#040F19" />
+              <stop offset="1" stopColor="#040F19" />
             </linearGradient>
           </defs>
         </svg>

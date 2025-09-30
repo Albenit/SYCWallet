@@ -82,7 +82,7 @@ export default function Dashboard() {
             {copied ? (
               <span className="text-xs text-green-400">Copied!</span>
             ) : (
-              <Copy size={16} className="opacity-60 group-hover:opacity-100" />
+              <Copy size={16} className="opacity-60 group-hover:opacity-100 cursor-pointer" />
             )}
           </button>
         </div>
@@ -99,26 +99,23 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-6 flex gap-6 justify-center">
-          <button onClick={() => setTab("token")} className={`flex flex-col items-center gap-2 text-sm ${tab === "token" ? "text-white" : "text-gray-400"}`}>
+          <button onClick={() => setTab("token")} className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${tab === "token" ? "text-white" : "text-gray-400"}`}>
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
               <img src={tokenIcon} alt="tokens" />
             </span>
             <span>Tokens</span>
-            {tab === "token" && <div className="h-[2px] w-8 bg-blue-500" />}
           </button>
-          <button onClick={() => setTab("send")} className={`flex flex-col items-center gap-2 text-sm ${tab === "send" ? "text-white" : "text-gray-400"}`}>
+          <button onClick={() => setTab("send")} className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${tab === "send" ? "text-white" : "text-gray-400"}`}>
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
               <img src={sendIcon} alt="send" />
             </span>
             <span>Send</span>
-            {tab === "send" && <div className="h-[2px] w-8 bg-blue-500" />}
           </button>
-          <button onClick={() => setTab("receive")} className={`flex flex-col items-center gap-2 text-sm ${tab === "receive" ? "text-white" : "text-gray-400"}`}>
+          <button onClick={() => setTab("receive")} className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${tab === "receive" ? "text-white" : "text-gray-400"}`}>
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
               <img src={receiveIcon} alt="receive" />
             </span>
             <span>Receive</span>
-            {tab === "receive" && <div className="h-[2px] w-8 bg-blue-500" />}
           </button>
           {/* <button onClick={() => setTab("swap")} className={`flex flex-col items-center gap-2 text-sm ${tab === "swap" ? "text-white" : "text-gray-400"}`}>
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
@@ -128,7 +125,7 @@ export default function Dashboard() {
                   {tab === "receive" && <div className="h-[2px] w-8 bg-blue-500" />}
                 </button> */}
         </div>
-        <hr className="text-[#FFFFFF1A] my-4"/>
+        <hr className="text-[#FFFFFF1A] my-4" />
 
         {/* Tab Content */}
         <div className="mt-8">
