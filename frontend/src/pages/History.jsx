@@ -1,15 +1,16 @@
 import coinAvatar from "../assets/svg/coinAvatar.svg";
-import networkBadge from "../assets/svg/networkBadge.svg";
-import { Copy, ArrowUpRight } from "lucide-react";
+import { Copy, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import useWalletMe from "../hooks/useWalletMe";
+import useTxHistory from "../hooks/useTxHistory";
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import transectionIcon from "../assets/svg/transectionIcon.svg";
 import PageLayout from "../components/layouts/PageLayout";
 
 export default function History() {
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("sent");
   const { address, Addressloading } = useWalletMe();
+  const { history, loading, error } = useTxHistory(address);
 
   const handleCopy = async () => {
     if (!address) return;
@@ -22,9 +23,17 @@ export default function History() {
     }
   };
 
+  const sentTxs = history.filter(
+    (tx) => tx.from?.toLowerCase() === address?.toLowerCase()
+  );
+  const receivedTxs = history.filter(
+    (tx) => tx.to?.toLowerCase() === address?.toLowerCase()
+  );
+
+  const displayed = activeTab === "sent" ? sentTxs : receivedTxs;
+
   return (
     <PageLayout>
-      {/* Header */}
       <div className="flex items-center justify-between px-6 pt-6">
         <div className="flex items-center gap-3">
           <div className="relative inline-flex h-9 w-9 items-center justify-center rounded-full">
@@ -44,43 +53,89 @@ export default function History() {
             {copied ? (
               <span className="text-xs text-green-400">Copied!</span>
             ) : (
-              <Copy
-                size={16}
-                className="opacity-60 group-hover:opacity-100"
-              />
+              <Copy size={16} className="opacity-60 group-hover:opacity-100 cursor-pointer"  />
             )}
           </button>
         </div>
       </div>
 
-      <div className="flex justify-between items-center px-6 mt-8 mb-4">
-        <span className="text-gray-300 font-medium">Transaction History</span>
+      {/* Tabs */}
+      <div className="flex px-6 my-4">
+        <button
+          onClick={() => setActiveTab("sent")}
+          className={`flex-1 py-2 rounded-l-md ${activeTab === "sent"
+            ? " text-white"
+            : " text-[#EFEFEF7A] cursor-pointer"
+            }`}
+        >
+          Sent
+        </button>
+        <button
+          onClick={() => setActiveTab("received")}
+          className={`flex-1 py-2 rounded-r-md ${activeTab === "received"
+            ? " text-white"
+            : " text-[#EFEFEF7A] cursor-pointer"
+            }`}
+        >
+          Received
+        </button>
       </div>
 
-      <div className="px-6">
-        <p className="text-sm text-gray-400 mb-3">February 6, 2025</p>
-        <div className="grid grid-cols-3 items-center bg-white/5 rounded-lg px-4 py-3">
-          {/* Left: action + time */}
-          <div className="flex items-center gap-3">
-            <ArrowUpRight className="text-gray-300" size={18} />
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">Sent</span>
-              <span className="text-xs text-gray-400">1:03 PM</span>
+      <div className="px-6 space-y-3 max-h-[400px] overflow-y-auto custom-scroll">
+        <div className="flex justify-center">
+          {loading && <span className="loader"></span>}
+        </div>
+        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {!loading && !error && displayed.length === 0 && (
+          <p className="text-gray-400 text-sm">
+            {activeTab === "sent" ? "No sent transactions" : "No received transactions"}
+          </p>
+        )}
+
+        {displayed.map((tx, idx) => (
+          <div
+            key={tx.hash || tx.transactionHash || idx}
+            className="bg-white/2 p-3 rounded mb-2"
+          >
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                {activeTab === "sent" ? (
+                    <ArrowUpRight
+                      size={16}
+                      className={"text-red-400"}
+                    />
+                ) : (
+                    <ArrowDownLeft
+                      size={16}
+                      className={"text-green-400"}
+                    />
+                )}
+                <span>{activeTab === "sent" ? "Sent" : "Received"}</span>
+              </div>
+              <span className="text-xs text-gray-400">
+                {tx.chain?.toUpperCase()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-gray-400 flex items-center gap-2">
+                Hash: {(tx.hash || tx.transactionHash)?.slice(0, 12)}...
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(tx.hash || tx.transactionHash || "");
+                  }}
+                  className="text-white-400 hover:text-blue-600 text-xs"
+                >
+                  <Copy size={16} className="opacity-60 group-hover:opacity-100 cursor-pointer" />
+            
+                </button>
+              </p>
+
+              <p>
+                {tx.value} {tx.asset || "NATIVE"}
+              </p>
             </div>
           </div>
-
-          {/* Middle: amount + USD */}
-          <div className="text-right">
-            <p className="text-sm font-medium">0.003</p>
-            <p className="text-xs text-gray-400">$105.43</p>
-          </div>
-
-          {/* Right: token icon */}
-          <div className="flex justify-end">
-            <img src={transectionIcon} alt="token" className="h-6 w-6" />
-          </div>
-        </div>
-
+        ))}
       </div>
 
       <Navbar />

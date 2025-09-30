@@ -8,6 +8,5 @@ export const chainKeyMap: Record<string, string> = {
   Fantom: "fantom",
   "Gnosis Chain": "gnosis",
   Base: "base",
-  Lumia: "lumia",
   "zkSync Era": "zksync",
 };

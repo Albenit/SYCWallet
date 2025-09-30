@@ -110,8 +110,6 @@ export default function SendTab({
       setSelectedToken(null);
       refetchPortfolio();
     } catch (err: any) {
-      console.log(err);
-      
       Swal.fire({
         title: "Transaction Failed",
         text: sendTransactionError(err),

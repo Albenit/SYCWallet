@@ -54,7 +54,7 @@ export default function Settings() {
               ) : (
                 <Copy
                   size={16}
-                  className="opacity-60 group-hover:opacity-100"
+                  className="opacity-60 group-hover:opacity-100 cursor-pointer"
                 />
               )}
             </button>
