@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Wallet } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
 import CryptoJS from "crypto-js";
+import { useAuth } from "../context/AuthContext";
 
 const API = "http://127.0.0.1:5000"; 
 
 export default function ImportWallet({ onImport  }) {
+  const { login } = useAuth(); 
   const [tab, setTab] = useState("private"); 
   const [value, setValue] = useState("");
   const [password, setPassword] = useState(""); 
@@ -51,7 +53,7 @@ export default function ImportWallet({ onImport  }) {
     }
     const data = await verifyRes.json();
 
-    if (data?.token) localStorage.setItem("auth_token", data.token);
+    if (data?.token) login(data.token); ;
     return { addr, data };
   }
 
@@ -95,7 +97,7 @@ const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
 const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
 
 // Store in sessionStorage
-sessionStorage.setItem("crypted_address", ciphertext);
+sessionStorage.setItem("c_aP", ciphertext);
       
 
       await signInWithWalletInstance(wallet);

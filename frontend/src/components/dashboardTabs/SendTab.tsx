@@ -60,7 +60,7 @@ export default function SendTab({
       if (!encryptedJson) throw new Error("No wallet found");
 
       const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!";
-      const password_enc = sessionStorage.getItem("crypted_address");
+      const password_enc = sessionStorage.getItem("c_aP");
 
       if (!password_enc) throw new Error("No encrypted password found");
 

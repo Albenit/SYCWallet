@@ -49,7 +49,7 @@ export default function CreateNewPassword() {
     const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
 
     // Store in sessionStorage
-    sessionStorage.setItem("crypted_address", ciphertext);
+    sessionStorage.setItem("c_aP", ciphertext);
 
     sessionStorage.setItem("tmp_secret_phrase", phrase);
 
