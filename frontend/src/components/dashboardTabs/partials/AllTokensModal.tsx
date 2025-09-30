@@ -58,7 +58,7 @@ export default function AllTokensModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4 flex-shrink-0">
-          <h2 className="text-lg font-semibold">All Tokens</h2>
+          <h2 className="text-lg font-semibold">Tokens</h2>
           <button
             onClick={closeModal}
             className="text-gray-400 hover:text-white cursor-pointer"

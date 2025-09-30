@@ -4,12 +4,12 @@ import CreateNewPassword from './pages/CreateNewPassword';
 import './App.css';
 import SecretPhrases from "./pages/SecretPhrases";
 import ConfirmSecretPhrase from "./pages/ConfirmSecretPhrase";
-import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
 import Signup from "./pages/Signup";
 import ImportWallet from "./pages/ImportWallet";
 import History from "./pages/History";
+import ProtectedRoute from "./components/ProtectedRoute";
 function App() {
   return (
       <Router>

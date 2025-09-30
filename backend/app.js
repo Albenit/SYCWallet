@@ -27,7 +27,7 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 const walletRoutes = require("./routes/walletRoutes");
 
-app.use("/api", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use('/api/wallet', walletRoutes);
 
 app.get("/", (_req, res) => res.send("API is running..."));

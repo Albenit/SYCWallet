@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
 import CryptoJS from "crypto-js";
+import { useAuth } from "../context/AuthContext";
 
 export default function StartPage() {
+  const { login } = useAuth(); 
   const navigate = useNavigate();
   const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
@@ -13,7 +15,7 @@ export default function StartPage() {
   const [error, setError] = useState("");
 
 
-  const API = "http://127.0.0.1:5000"; 
+  const API = "http://127.0.0.1:5000";
 
   async function signInWithWallet(wallet) {
     try {
@@ -46,7 +48,7 @@ export default function StartPage() {
       }
       const data = await verifyRes.json();
 
-      localStorage.setItem("auth_token", data.token);
+      login(data.token); 
 
       return data;
     } catch (e) {
@@ -80,97 +82,93 @@ export default function StartPage() {
       if (walletAddress.toLowerCase() !== address.trim().toLowerCase()) {
         throw new Error("Password does not match the encrypted wallet for this address.");
       }
-      
+
       //Password trolling with this name
-const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
+      const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
+      const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
+      sessionStorage.setItem("c_aP", ciphertext);
 
-// Encrypt the password with the secret
-const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
 
-// Store in sessionStorage
-sessionStorage.setItem("crypted_address", ciphertext);
-
-      
       await signInWithWallet(wallet);
 
       navigate("/dashboard");
     } catch (err) {
-        console.error(err);
+      console.error(err);
 
-        let msg = "Login failed. Please try again.";
+      let msg = "Login failed. Please try again.";
 
-        if (err.message.includes("No local encrypted wallet")) {
-          msg ="⚠️ Wallet not found on this browser. Please create or import a wallet first.";
-        } else if (err.message.includes("incorrect password")) {
-          msg = "❌ Incorrect password. Please check and try again.";
-        } else if (err.message.includes("does not match")) {  
-          msg = "⚠️ The address and password you entered do not match.";
-        } else if (err.message.toLowerCase().includes("network")) {
-          msg = "🌐 Network error. Check your internet connection.";
-        }
-
-        setError(msg);
-      }finally {
-          setLoading(false);
-        }
+      if (err.message.includes("No local encrypted wallet")) {
+        msg = "⚠️ Wallet not found on this browser. Please create or import a wallet first.";
+      } else if (err.message.includes("incorrect password")) {
+        msg = "❌ Incorrect password. Please check and try again.";
+      } else if (err.message.includes("does not match")) {
+        msg = "⚠️ The address and password you entered do not match.";
+      } else if (err.message.toLowerCase().includes("network")) {
+        msg = "🌐 Network error. Check your internet connection.";
       }
+
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <PageLayout>
       <div className="p-5 p-sm-8">
-          <div className="flex flex-col items-center mb-6">
-            <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
+        <div className="flex flex-col items-center mb-6">
+          <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
+        </div>
+        <div className="text-center mb-6">
+          <span className="text-[23px]">Secure and Trusted SYC Wallet</span>
+        </div>
+
+        <form className="space-y-4" onSubmit={handleLogin}>
+          <div>
+            <label className="block mb-1 text-sm text-gray-300">Wallet Address</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none"
+            />
           </div>
-          <div className="text-center mb-6">
-            <span className="text-[23px]">Secure and Trusted SYC Wallet</span>
+          <div>
+            <label className="block mb-1 text-sm text-gray-300">Password</label>
+            <input
+              type="password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none"
+            />
           </div>
 
-          <form className="space-y-4" onSubmit={handleLogin}>
-            <div>
-              <label className="block mb-1 text-sm text-gray-300">Wallet Address</label>
-              <input
-                type="text"
-                placeholder="0x..."
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block mb-1 text-sm text-gray-300">Password</label>
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none"
-              />
-            </div>
+          {error && <div className="text-red-400 text-sm">{error}</div>}
 
-            {error && <div className="text-red-400 text-sm">{error}</div>}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-md bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-60 cursor-pointer"
+          >
+            {loading ? "Logging in…" : "Login"}
+          </button>
+        </form>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-md bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-60 cursor-pointer"
-            >
-              {loading ? "Logging in…" : "Login"}
-            </button>
-          </form>
+        <p className="text-center text-sm text-gray-400 mt-4">
+          Don't have an account?{" "}
+          <span
+            onClick={() => navigate("/signup")}
+            className="text-blue-500 cursor-pointer hover:underline"
+          >
+            Sign Up
+          </span>
+        </p>
 
-          <p className="text-center text-sm text-gray-400 mt-4">
-            Don't have an account?{" "}
-            <span
-              onClick={() => navigate("/signup")}
-              className="text-blue-500 cursor-pointer hover:underline"
-            >
-              Sign Up
-            </span>
-          </p>
-
-          <p className="text-center text-sm text-gray-400 mt-4 cursor-pointer" onClick={() => navigate("/import-wallet")}>
+        <p className="text-center text-sm text-gray-400 mt-4 cursor-pointer" onClick={() => navigate("/import-wallet")}>
           Import Existing Wallet?
-          </p>
+        </p>
       </div>
     </PageLayout>
   );

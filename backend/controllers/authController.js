@@ -1,4 +1,4 @@
 
-exports.createWallet = async (req,res) => {
+exports.verifyToken = async (req,res) => {
 
 }

@@ -3,8 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Wallet } from "ethers"; // v6
 import Steps from "../components/Steps";
 import PageLayout from "../components/layouts/PageLayout";
+import { useAuth } from "../context/AuthContext";
 
 export default function ConfirmSecretPhrase() {
+  const { login } = useAuth();  
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -91,7 +93,7 @@ export default function ConfirmSecretPhrase() {
       } catch { }
       const verifyData = await verifyRes.json()
 
-      localStorage.setItem("auth_token", verifyData.token);
+      login(verifyData.token); 
 
       setInput("");
 
