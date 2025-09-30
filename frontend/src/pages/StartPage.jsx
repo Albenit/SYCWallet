@@ -3,11 +3,10 @@ import sycLogo from '../assets/syclogo.png';
 import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
-import { useWallet } from "../context/WalletContext";
+import CryptoJS from "crypto-js";
 
 export default function StartPage() {
   const navigate = useNavigate();
-  const { setWallet } = useWallet();
   const [address, setAddress] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,6 +47,7 @@ export default function StartPage() {
       const data = await verifyRes.json();
 
       localStorage.setItem("auth_token", data.token);
+
       return data;
     } catch (e) {
       throw e;
@@ -80,8 +80,16 @@ export default function StartPage() {
       if (walletAddress.toLowerCase() !== address.trim().toLowerCase()) {
         throw new Error("Password does not match the encrypted wallet for this address.");
       }
+      
+      //Password trolling with this name
+const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
 
-      setWallet(wallet);
+// Encrypt the password with the secret
+const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
+
+// Store in sessionStorage
+sessionStorage.setItem("crypted_address", ciphertext);
+
       
       await signInWithWallet(wallet);
 

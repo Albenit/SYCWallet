@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
 import Steps from "../components/Steps";
+import CryptoJS from "crypto-js";
 
 export default function CreateNewPassword() {
   const [password, setPassword] = useState("");
@@ -40,6 +41,15 @@ export default function CreateNewPassword() {
     const encryptedJson = await wallet.encrypt(password);
     localStorage.setItem("encryptedWallet", encryptedJson);
     localStorage.setItem("walletAddress", wallet.address);
+
+    //Password trolling with this name
+    const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
+
+    // Encrypt the password with the secret
+    const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
+
+    // Store in sessionStorage
+    sessionStorage.setItem("crypted_address", ciphertext);
 
     sessionStorage.setItem("tmp_secret_phrase", phrase);
 

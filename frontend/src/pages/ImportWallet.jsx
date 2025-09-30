@@ -1,10 +1,9 @@
-// ImportWallet.jsx
 import React, { useState } from "react";
 import sycLogo from "../assets/syclogo.png";
 import { useNavigate } from "react-router-dom";
 import { Wallet } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
-import { useWallet } from "../context/WalletContext";
+import CryptoJS from "crypto-js";
 
 const API = "http://127.0.0.1:5000"; 
 
@@ -15,7 +14,6 @@ export default function ImportWallet({ onImport  }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { setWallet } = useWallet();
 
 
   const placeholder =
@@ -89,8 +87,16 @@ export default function ImportWallet({ onImport  }) {
       const encryptedJson = await wallet.encrypt(password);
       localStorage.setItem("encryptedWallet", encryptedJson);
       localStorage.setItem("wallet_address", address);
+      
+      //Password trolling with this name
+const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
 
-      setWallet(wallet);
+// Encrypt the password with the secret
+const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
+
+// Store in sessionStorage
+sessionStorage.setItem("crypted_address", ciphertext);
+      
 
       await signInWithWalletInstance(wallet);
 

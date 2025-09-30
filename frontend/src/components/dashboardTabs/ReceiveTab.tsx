@@ -14,7 +14,7 @@ export default function ReceiveTab({ address, handleCopy }: ReceiveTabProps) {
       <div className="flex items-center gap-2 bg-[#02080E8C] px-3 py-2 rounded-md">
         <span className="text-xs break-all p-1">{address || "0x..."}</span>
         <button onClick={handleCopy}>
-          <Copy size={14} className="opacity-60 hover:opacity-100" />
+          <Copy size={14} className="opacity-60 hover:opacity-100 cursor-pointer" />
         </button>
       </div>
     </div>
