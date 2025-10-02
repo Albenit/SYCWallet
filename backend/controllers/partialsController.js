@@ -1,23 +1,56 @@
 const CHAINS = require("../chain/config");
 
-exports.getChain = async (req, res) => {
-  const chainn = req.params.chain;
-  
-  const envRPC = {
-    ethereum: process.env.RPC_ETHEREUM,
-    sepolia: process.env.RPC_SEPOLIA,
-    polygon: process.env.RPC_POLYGON,
-    bsc: process.env.RPC_BSC,
-  };
+exports.getChains = async (req, res) => {
+  try {
+    const chains = Object.entries(CHAINS).map(([key, chain]) => ({
+      key,
+      label: chain.label,
+      nativeSymbol: chain.nativeSymbol,
+      decimals: chain.decimals,
+      chainId: chain.chainId,
+      logo: chain.logo,
+    }));
 
-  const chain = CHAINS[chainn];
-  if (!chain) {
-    return res.status(404).json({ error: "Chain not found" });
+    return res.json({
+      success: true,
+      chains
+    });
+  } catch (err) {
+    console.error("Error in getChains:", err);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to load chains"
+    });
   }
-
-  res.json({
-    chainn,
-    ...chain,
-    rpc: envRPC[chainn] || null,
-  });
 };
+
+exports.getChainTokens = async (req, res) => {
+  try {
+    const {
+      chain
+    } = req.params;
+    const chainConfig = CHAINS[chain];
+
+    if (!chainConfig) {
+      return res.status(404).json({
+        error: "chain_not_found"
+      });
+    }
+
+    const tokens = [{
+        symbol: chainConfig.nativeSymbol,
+        decimals: chainConfig.decimals,
+        address: null,
+        logo: chainConfig.logo,
+        native: true,
+      },
+      ...chainConfig.tokens,
+    ];
+
+    res.json(tokens);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message
+    });
+  }
+}

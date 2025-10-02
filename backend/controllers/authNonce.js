@@ -6,10 +6,10 @@ const nonces = new Map();
 const jwt = require("jsonwebtoken");
 
 
-
 function isEthAddress(addr) {
   return /^0x[a-fA-F0-9]{40}$/.test(addr || "");
 }
+
 function sweepExpired() {
   const now = Date.now();
   for (const [addr, v] of nonces.entries()) {

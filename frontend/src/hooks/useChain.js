@@ -1,24 +1,31 @@
-import { useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
 
 export default function useChain() {
-  const [chain, setChain] = useState(null);
+  const [chains, setChains] = useState([]); // always start with []
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchChain = async (key) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { data } = await axios.get(`http://127.0.0.1:5000/api/wallet/chain/${key}`);
-      setChain(data);
-    } catch (err) {
-      setError(err.message || "Failed to fetch chain");
-      setChain(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const fetchChains = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("http://localhost:5000/api/wallet/chains");
+        if (!res.ok) throw new Error("Failed to fetch chains");
 
-  return { chain, loading, error, fetchChain };
+        const data = await res.json();
+
+        // Defensive fallback → always array
+        setChains(Array.isArray(data.chains) ? data.chains : []);
+      } catch (err) {
+        setError(err.message);
+        setChains([]); // ensure still an array
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchChains();
+  }, []);
+
+  return { chains, loading, error };
 }

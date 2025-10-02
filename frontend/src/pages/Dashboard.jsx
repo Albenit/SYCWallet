@@ -111,19 +111,18 @@ export default function Dashboard() {
             </span>
             <span>Send</span>
           </button>
+          <button onClick={() => setTab("swap")} className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${tab === "swap" ? "text-white" : "text-gray-400"}`}>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
+              <img src={swapIcon} alt="swap" />
+            </span>
+            <span>Swap</span>
+          </button>
           <button onClick={() => setTab("receive")} className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${tab === "receive" ? "text-white" : "text-gray-400"}`}>
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
               <img src={receiveIcon} alt="receive" />
             </span>
-            <span>Receive</span>
+            <span>Receive</span>        
           </button>
-          {/* <button onClick={() => setTab("swap")} className={`flex flex-col items-center gap-2 text-sm ${tab === "swap" ? "text-white" : "text-gray-400"}`}>
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
-                    <img src={swapIcon} alt="receive" />
-                  </span>
-                  <span>Swap</span>
-                  {tab === "receive" && <div className="h-[2px] w-8 bg-blue-500" />}
-                </button> */}
         </div>
         <hr className="text-[#FFFFFF1A] my-4" />
 
@@ -131,8 +130,8 @@ export default function Dashboard() {
         <div className="mt-8">
           {tab === "token" && (<TokensTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} refetchPortfolio={refetchPortfolio} livePrices={livePrices} />)}
           {tab === "send" && (<SendTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} refetchPortfolio={refetchPortfolio} />)}
-          {tab === "receive" && <ReceiveTab address={address} handleCopy={handleCopy} />}
           {tab === "swap" && <SwapTab />}
+          {tab === "receive" && <ReceiveTab address={address} handleCopy={handleCopy} />}
         </div>
       </div>
       <Navbar />

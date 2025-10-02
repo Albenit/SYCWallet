@@ -1,233 +1,189 @@
-import React, { useState } from "react";
-import { ethers, Wallet } from "ethers";
-import useChain from "../../hooks/useChain";
-import Swal from "sweetalert2";
-
-const ERC20_ABI = [
-  "function approve(address spender, uint256 amount) external returns (bool)",
-  "function allowance(address owner, address spender) external view returns (uint256)",
-  "function decimals() external view returns (uint8)",
-  "function symbol() external view returns (string)"
-];
-
-const UNISWAP_V2_ROUTER = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+import { useState } from "react";
+import { ArrowRight, ChevronRight, MoveRight, ArrowBigRight } from "lucide-react";
+import SwapChainModal from "./partials/SwapChainModal";
+import SwapTokenModal from "./partials/SwapTokenModal";
 
 export default function SwapTab() {
-  const { chain, fetchChain } = useChain();
+  const [fromChain, setFromChain] = useState({
+    key: "ethereum", 
+    label: "Ethereum",
+    nativeSymbol: "ETH",
+    decimals: 18,  
+    chainId: 1,
+    logo: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+  });
 
-  const [fromChainKey, setFromChainKey] = useState("");
-  const [toChainKey, setToChainKey] = useState("");
-  const [fromToken, setFromToken] = useState<any>(null);
-  const [toToken, setToToken] = useState<any>(null);
-  const [fromAmount, setFromAmount] = useState("");
+  const [toChain, setToChain] = useState({
+    key: "polygon", 
+    label: "Polygon",
+    nativeSymbol: "MATIC",
+    decimals: 18, 
+    chainId: 137,
+    logo: "https://assets.coingecko.com/coins/images/4713/large/matic-token-icon.png",
+  });
+
+
+  const [fromToken, setFromToken] = useState({
+    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    symbol: "USDT",
+    decimals: 6,
+    binanceSymbol: "USDTUSDT",     
+    logo: "https://assets.coingecko.com/coins/images/325/large/Tether.png",
+  });
+
+  const [toToken, setToToken] = useState({
+    address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",        
+    symbol: "USDC",
+    decimals: 6,
+    binanceSymbol: "USDCUSDT  ",     
+    logo: "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png",
+  });
+
+
+  const [fromAmount, setFromAmount] = useState(""); 
   const [toAmount, setToAmount] = useState("");
   const [swapping, setSwapping] = useState(false);
 
-  const handleFromChainChange = (key: string) => {
-    setFromChainKey(key);
-    setFromToken(null);
-    if (key) fetchChain(key);
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+  const [selecting, setSelecting] = useState<"from" | "to" | null>(null);
 
-  const handleToChainChange = (key: string) => {
-    setToChainKey(key);
-    setToToken(null);
-    if (key) fetchChain(key);
-  };
-
-  const handleSwap = async () => {
-    try {
-      if (!fromChainKey || !toChainKey || !fromToken || !toToken || !fromAmount) {
-        Swal.fire({
-          title: "Missing Information",
-          text: "Please select both chains, tokens, and enter amount.",
-          icon: "warning",
-          confirmButtonText: "Close",
-          background: "#02010C",
-          color: "#ffffff",
-        });
-        return;
-      }
-
-      setSwapping(true);
-
-      const privateKey = localStorage.getItem("privateKey");
-      if (!privateKey) throw new Error("No wallet found. Please log in again.");
-
-      const provider = new ethers.JsonRpcProvider(chain.rpc);
-      const signer = new Wallet(privateKey, provider);
-
-      const decimals = fromToken?.decimals || 18;
-      const amountInWei = ethers.parseUnits(fromAmount.toString(), decimals);
-
-      const routerAddress = UNISWAP_V2_ROUTER.toLowerCase();
-      const fromAddr = fromToken.address ? fromToken.address.toLowerCase() : ethers.ZeroAddress;
-      const toAddr = toToken.address ? toToken.address.toLowerCase() : ethers.ZeroAddress;
-
-      if (fromToken.address) {
-        const erc20 = new ethers.Contract(fromAddr, ERC20_ABI, signer);
-        const allowance = await erc20.allowance(await signer.getAddress(), routerAddress);
-        if (allowance < amountInWei) {
-          const approveTx = await erc20.approve(routerAddress, amountInWei);
-          await approveTx.wait();
-        }
-      }
-
-      // Router contract
-      const router = new ethers.Contract(
-        routerAddress,
-        [
-          "function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) external returns (uint[] memory)"
-        ],
-        signer
-      );
-
-      const path = [fromAddr, toAddr];
-
-      const tx = await router.swapExactTokensForTokens(
-        amountInWei,
-        path,
-        await signer.getAddress(),
-        Math.floor(Date.now() / 1000) + 60 * 10
-      );
-
-      await tx.wait();
-
-      Swal.fire({
-        title: "Swap Successful",
-        text: `Hash: ${tx.hash}`,
-        icon: "success",
-        confirmButtonText: "OK",
-        background: "#02010C",
-        color: "#ffffff",
-      });
-
-      setFromAmount("");
-      setToAmount("");
-    } catch (err: any) {
-      console.error("Swap failed:", err);
-      let userMessage = "Something went wrong. Please try again.";
-      if (err.code === "INSUFFICIENT_FUNDS") {
-        userMessage = "Insufficient funds to complete this swap.";
-      } else if (err.code === "NETWORK_ERROR") {
-        userMessage = "Network error. Please check your RPC.";
-      } else if (err.code === "ACTION_REJECTED") {
-        userMessage = "Transaction was rejected.";
-      } else if (err.info?.error?.message?.includes("gas")) {
-        userMessage = "Not enough balance to cover gas fees.";
-      }
-
-      Swal.fire({
-        title: "Swap Failed",
-        text: userMessage,
-        icon: "error",
-        confirmButtonText: "Close",
-        background: "#02010C",
-        color: "#ffffff",
-      });
-    } finally {
+  const handleSwap = () => {
+    setSwapping(true);
+    setTimeout(() => {
+      setToAmount(fromAmount);
       setSwapping(false);
-    }
+    }, 1000);
+  };
+
+  const swapTokens = () => {
+    const temp = fromToken;
+    setFromToken(toToken);
+    setToToken(temp);
+
+    setFromChain(toChain)
+    setToChain(fromChain)
+
+    const tempAmount = fromAmount;
+    setFromAmount(toAmount);
+    setToAmount(tempAmount);
   };
 
   return (
-    <div className="space-y-6">
-      {/* FROM */}
-      <div className="bg-[#1d1f24] rounded-xl p-4">
-        <p className="text-sm text-gray-400 mb-2">From</p>
-        <select
-          value={fromChainKey}
-          onChange={(e) => handleFromChainChange(e.target.value)}
-          className="w-full rounded-md bg-[#151928] px-4 py-3 text-sm text-white border border-white/10"
+    <div className="space-y-4 max-w-sm mx-auto">
+      <div className="bg-[#02080E8C] rounded-xl p-4 mb-0">
+        <div className="flex items-center gap-2 mb-3 ">
+          <p className="text-sm text-gray-400">From</p>
+          <img src={fromChain.logo} alt="" width={15} height={15} />
+          <div className="flex items-center cursor-pointer"
+            onClick={() => {
+              setSelecting("from");
+              setIsModalOpen(true);
+            }}>
+            <span>{fromChain.label}</span>
+            <ChevronRight size={20} className="opacity-60 pt-1" />      
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+              <img src={fromToken.logo} alt="" width={25} height={25}/>
+                <div className="flex items-center cursor-pointer"
+                  onClick={() => {  
+                    setSelecting("from");
+                    setIsTokenModalOpen(true);
+                  }}>
+                  <span>{fromToken.symbol}</span>
+                  <ChevronRight 
+                    size={18}
+                    className="opacity-60 group-hover:opacity-100"
+                  />
+              </div>
+          </div>
+          <input
+            type="number"
+            placeholder="0"
+            value={fromAmount}
+            onChange={(e) => setFromAmount(e.target.value)}
+            className="w-24 text-right bg-transparent text-white text-sm focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-center -my-2 z-10 relative">
+        <button
+          className="bg-[#02080E8C] p-2 rounded-full border border-white/10 hover:bg-white/2 transition cursor-pointer"
+          onClick={swapTokens}
         >
-          <option value="">Select Chain</option>
-          <option value="ethereum">Ethereum</option>
-          <option value="polygon">Polygon</option>
-          <option value="bsc">BNB Chain</option>
-          <option value="sepolia">Sepolia</option>
-        </select>
-
-        {chain?.tokens?.length > 0 && (
-          <select
-            value={fromToken?.address || ""}
-            onChange={(e) => {
-              const token = chain.tokens.find((t: any) => t.address === e.target.value);
-              setFromToken(token || null);
-            }}
-            className="w-full mt-3 rounded-md bg-[#151928] px-4 py-3 text-sm text-white border border-white/10"
-          >
-            <option value="">Native ({chain.nativeSymbol})</option>
-            {chain.tokens.map((t: any) => (
-              <option key={t.address} value={t.address}>
-                {t.symbol}
-              </option>
-            ))}
-          </select>
-        )}
-
-        <input
-          type="number"
-          placeholder="Amount"
-          value={fromAmount}
-          onChange={(e) => setFromAmount(e.target.value)}
-          className="w-full mt-3 rounded-md bg-[#151928] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10"
-        />
+          ⇅
+        </button>
       </div>
 
       {/* TO */}
-      <div className="bg-[#1d1f24] rounded-xl p-4">
-        <p className="text-sm text-gray-400 mb-2">To</p>
-        <select
-          value={toChainKey}
-          onChange={(e) => handleToChainChange(e.target.value)}
-          className="w-full rounded-md bg-[#151928] px-4 py-3 text-sm text-white border border-white/10"
-        >
-          <option value="">Select Chain</option>
-          <option value="ethereum">Ethereum</option>
-          <option value="polygon">Polygon</option>
-          <option value="bsc">BNB Chain</option>
-          <option value="sepolia">Sepolia</option>
-        </select>
+      <div className="bg-[#02080E8C] rounded-xl p-4 ">
+        <div className="flex items-center gap-2 mb-3">
+          <p className="text-sm text-gray-400">To</p>
+          <img src={toChain.logo} alt="" width={15} height={15} />
+          <div className="flex items-center cursor-pointer"
+            onClick={() => {
+              setSelecting("to");
+              setIsModalOpen(true);
+            }}>
+            <span>{toChain.label}</span>
+            <ChevronRight size={20} className="opacity-60 pt-1" />      
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <img src={toToken.logo} alt="" width={25} height={25} />
+              <div className="flex items-center cursor-pointer"
+                onClick={() => {
+                  setSelecting("to");
+                  setIsTokenModalOpen(true);
+                }}>
+                <span>{toToken.symbol}</span>
+                <ChevronRight
+                  size={18}
+                  className="opacity-60 group-hover:opacity-100"
+                />
+              </div>
+          </div>
+          <input
+            type="number"
+            placeholder="0"
+            value={toAmount}
+            readOnly
+            className="w-24 text-right bg-transparent text-gray-400 text-sm focus:outline-none"
+          />
+        </div>
+      </div>  
 
-        {chain?.tokens?.length > 0 && (
-          <select
-            value={toToken?.address || ""}
-            onChange={(e) => {
-              const token = chain.tokens.find((t: any) => t.address === e.target.value);
-              setToToken(token || null);
-            }}
-            className="w-full mt-3 rounded-md bg-[#151928] px-4 py-3 text-sm text-white border border-white/10"
-          >
-            <option value="">Native ({chain.nativeSymbol})</option>
-            {chain.tokens.map((t: any) => (
-              <option key={t.address} value={t.address}>
-                {t.symbol}
-              </option>
-            ))}
-          </select>
-        )}
-
-        <input
-          type="number"
-          placeholder="You receive"
-          value={toAmount}
-          readOnly
-          className="w-full mt-3 rounded-md bg-[#151928] px-4 py-3 text-sm text-gray-300 border border-white/10"
-        />
-      </div>
-
-      {/* Swap Button */}
       <button
-        disabled={!fromAmount || !fromToken || !toToken || swapping}
+        disabled={!fromAmount || swapping}
         onClick={handleSwap}
-        className={`w-full rounded-md py-3 font-semibold transition ${
-          !fromAmount || !fromToken || !toToken || swapping
-            ? "bg-gray-600 cursor-not-allowed"
-            : "bg-green-600 hover:bg-green-700 text-white"
-        }`}
+        className={`w-full rounded-full py-3 transition bg-blue-600 hover:bg-blue-700 cursor-pointer font-[700] `}
       >
         {swapping ? "Swapping..." : "Swap"}
       </button>
+
+      <SwapChainModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSelect={(chain: any) => {
+          if (selecting === "from") setFromChain(chain);
+          if (selecting === "to") setToChain(chain);
+        }}
+      />
+
+      <SwapTokenModal
+        isOpen={isTokenModalOpen}
+        onClose={() => setIsTokenModalOpen(false)}
+        chainKey={selecting === "from" ? fromChain.key : toChain.key}
+        onSelect={(token: any) => {
+          if (selecting === "from") setFromToken(token);
+          if (selecting === "to") setToToken(token);
+        }}
+      />
     </div>
   );
 }
