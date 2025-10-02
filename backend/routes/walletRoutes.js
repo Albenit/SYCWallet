@@ -33,6 +33,7 @@ router.post("/:chain/prepareTx", transactionsController.prepareTx);
 
 
 
-router.get('/chain/:chain', partialsController.getChain);
+router.get('/chains', partialsController.getChains);
+router.get('/tokens/:chain', partialsController.getChainTokens);
 
 module.exports = router;

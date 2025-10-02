@@ -2,7 +2,7 @@ import { useState } from "react";
 
 const useAddRemoveToken = () => {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null); // no :string | null
+  const [error, setError] = useState(null);
 
   const toggleToken = async (chain, tokenAddress) => {
     setLoading(true);

@@ -2,7 +2,7 @@ module.exports = {
   ethereum: {
     label: "Ethereum",
     nativeSymbol: "ETH",
-    decimals: 18,
+    decimals: 18, 
     chainId: 1,
     binanceSymbol: "ETHUSDT",
     logo: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",

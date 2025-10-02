@@ -6,13 +6,13 @@ import PageLayout from "../components/layouts/PageLayout";
 import CryptoJS from "crypto-js";
 import { useAuth } from "../context/AuthContext";
 
-const API = "http://127.0.0.1:5000"; 
+const API = "http://127.0.0.1:5000";
 
-export default function ImportWallet({ onImport  }) {
-  const { login } = useAuth(); 
-  const [tab, setTab] = useState("private"); 
+export default function ImportWallet({ onImport }) {
+  const { login } = useAuth();
+  const [tab, setTab] = useState("seed");
   const [value, setValue] = useState("");
-  const [password, setPassword] = useState(""); 
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ export default function ImportWallet({ onImport  }) {
     }
     const data = await verifyRes.json();
 
-    if (data?.token) login(data.token); ;
+    if (data?.token) login(data.token);;
     return { addr, data };
   }
 
@@ -81,7 +81,7 @@ export default function ImportWallet({ onImport  }) {
         if (words.length < 12) {
           throw new Error("Seed phrase too short — expected 12 or 24 words.");
         }
-        wallet = Wallet.fromPhrase(phrase); 
+        wallet = Wallet.fromPhrase(phrase);
       }
 
       const address = wallet.address.toLowerCase();
@@ -89,16 +89,16 @@ export default function ImportWallet({ onImport  }) {
       const encryptedJson = await wallet.encrypt(password);
       localStorage.setItem("encryptedWallet", encryptedJson);
       localStorage.setItem("wallet_address", address);
-      
+
       //Password trolling with this name
-const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
+      const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
 
-// Encrypt the password with the secret
-const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
+      // Encrypt the password with the secret
+      const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
 
-// Store in sessionStorage
-sessionStorage.setItem("c_aP", ciphertext);
-      
+      // Store in sessionStorage
+      sessionStorage.setItem("c_aP", ciphertext);
+
 
       await signInWithWalletInstance(wallet);
 
@@ -125,35 +125,32 @@ sessionStorage.setItem("c_aP", ciphertext);
         <div className="flex items-center justify-center gap-12 mb-6">
           <button
             type="button"
-            onClick={() => setTab("private")}
-            className={`text-lg font-medium transition-colors ${
-              tab === "private" ? "text-blue-300" : "text-gray-300/80"
-            }`}
-            aria-pressed={tab === "private"}
-          >
-            <span>Private Key</span>
-            <div
-              className={`mt-2 h-[2px] mx-auto w-16 transition-all ${
-                tab === "private" ? "bg-gradient-to-r from-[#3B82F6] to-[#5EE2FF]" : "bg-transparent"
-              }`}
-            />
-          </button>
-
-          <button
-            type="button"
             onClick={() => setTab("seed")}
-            className={`text-lg font-medium transition-colors ${
-              tab === "seed" ? "text-blue-300" : "text-gray-300/80"
-            }`}
+            className={`text-lg font-medium transition-colors cursor-pointer ${tab === "seed" ? "text-blue-300" : "text-gray-300/80"
+              }`}
             aria-pressed={tab === "seed"}
           >
             <span>Seed Phrase</span>
             <div
-              className={`mt-2 h-[2px] mx-auto w-20 transition-all ${
-                tab === "seed" ? "bg-gradient-to-r from-[#3B82F6] to-[#5EE2FF]" : "bg-transparent"
-              }`}
+              className={`mt-2 h-[2px] mx-auto w-20 transition-all ${tab === "seed" ? "bg-gradient-to-r from-[#3B82F6] to-[#5EE2FF]" : "bg-transparent"
+                }`}
             />
           </button>
+          <button
+            type="button"
+            onClick={() => setTab("private")}
+            className={`text-lg font-medium transition-colors cursor-pointer ${tab === "private" ? "text-blue-300" : "text-gray-300/80"
+              }`}
+            aria-pressed={tab === "private"}
+          >
+            <span>Private Key</span>
+            <div
+              className={`mt-2 h-[2px] mx-auto w-16 transition-all ${tab === "private" ? "bg-gradient-to-r from-[#3B82F6] to-[#5EE2FF]" : "bg-transparent"
+                }`}
+            />
+          </button>
+
+
         </div>
 
         {/* Form */}
@@ -189,7 +186,7 @@ sessionStorage.setItem("c_aP", ciphertext);
           <div className="mt-6">
             <button
               type="submit"
-              className="w-full py-3 rounded-lg text-md font-semibold bg-gradient-to-r from-[#3045FFCF] to-[#6a64ff] hover:scale-[1.002] active:scale-[0.998] transform transition disabled:opacity-60"
+              className="cursor-pointer w-full py-3 rounded-lg text-md font-semibold bg-gradient-to-r from-[#3045FFCF] to-[#6a64ff] hover:scale-[1.002] active:scale-[0.998] transform transition disabled:opacity-60"
               disabled={loading}
             >
               {loading ? "Importing..." : "Import Wallet"}
