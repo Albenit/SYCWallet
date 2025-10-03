@@ -2,17 +2,7 @@ import React, { useState, useEffect } from "react";
 import useAllTokens from "../../../hooks/useAllTokens";
 import useAddRemoveToken from "../../../hooks/useAddRemoveToken";
 
-interface AllTokensModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  refetchPortfolio: () => void;
-}
-
-export default function AllTokensModal({
-  isOpen,
-  onClose,
-  refetchPortfolio,
-}: AllTokensModalProps) {
+export default function AllTokensModal({isOpen,onClose,refetchPortfolio,}:any) {
   const {
     tokens,
     loading: tokensLoading,
@@ -21,6 +11,7 @@ export default function AllTokensModal({
   } = useAllTokens();
   const { toggleToken } = useAddRemoveToken();
   const [hasAnyTokenChanged, setHasAnyTokenChanged] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // <-- search state
 
   useEffect(() => {
     if (isOpen) {
@@ -46,6 +37,14 @@ export default function AllTokensModal({
     }
   };
 
+  // filter tokens only in frontend
+  const filteredTokens = tokens?.map((chain: any) => ({
+    ...chain,
+    tokens: chain.tokens.filter((token: any) =>
+      token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+    ),
+  }));
+
   if (!isOpen) return null;
 
   return (
@@ -65,42 +64,49 @@ export default function AllTokensModal({
             ✕
           </button>
         </div>
+        <div className="mb-5 mt-2 pe-3">
+          <input
+            type="text"
+            placeholder="Search.."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)} // update state
+            className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white text-[12px] focus:outline-none"
+          />
+        </div>
 
         <div className="overflow-y-auto custom-scroll flex-1 pr-2 ">
-          {/* {tokensLoading && (
-            <div className="absolute h-full w-full top-0 left-0 flex items-center justify-center bg-black/50">
-              <p>Loading tokens…</p>
-            </div>
-          )} */}
           {tokensError && <p className="text-red-500">{tokensError}</p>}
-          {
-            tokens?.map((chain: any) => (
+          {filteredTokens?.map((chain: any) => (
               <div key={chain.chain} className="mb-4">
-                <h3 className="text-sm font-medium text-gray-400 mb-2">
-                  {chain.chainLabel}
-                </h3>
-                <div className="space-y-2">
-                  {chain.tokens.map((token: any, idx: number) => (
-                    <div
-                      key={`${chain.chain}-${idx}`}
-                      className="flex items-center justify-between bg-white/2 rounded-3xl px-3 py-2"
-                    >
-                      <span>{token.symbol}</span>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={token.active}
-                          onChange={() =>
-                            addRemoveToken(token.chain, token.address)
-                          }
-                        />
-                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
-                        <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
-                      </label>
+                {chain.tokens.length > 0 && (
+                  <>
+                    <h3 className="text-sm font-medium text-gray-400 mb-2">
+                      {chain.chainLabel}
+                    </h3>
+                    <div className="space-y-2">
+                      {chain.tokens.map((token: any, idx: number) => (
+                        <div
+                          key={`${chain.chain}-${idx}`}
+                          className="flex items-center justify-between bg-white/2 rounded-3xl px-3 py-2"
+                        >
+                          <span>{token.symbol}</span>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={token.active}
+                              onChange={() =>
+                                addRemoveToken(token.chain, token.address)
+                              }
+                            />
+                            <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
+                            <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
+                          </label>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </div>
             ))}
         </div>
