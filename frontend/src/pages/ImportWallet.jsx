@@ -6,7 +6,7 @@ import PageLayout from "../components/layouts/PageLayout";
 import CryptoJS from "crypto-js";
 import { useAuth } from "../context/AuthContext";
 
-const API = "http://127.0.0.1:5000";
+const API = import.meta.env.VITE_API_URL;
 
 export default function ImportWallet({ onImport }) {
   const { login } = useAuth();
@@ -26,7 +26,7 @@ export default function ImportWallet({ onImport }) {
   async function signInWithWalletInstance(walletInstance) {
     const addr = (walletInstance.address || (await walletInstance.getAddress())).toLowerCase();
 
-    const nonceRes = await fetch(`${API}/api/auth/nonce`, {
+    const nonceRes = await fetch(`${API}/auth/nonce`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address: addr }),
@@ -41,7 +41,7 @@ export default function ImportWallet({ onImport }) {
     const message = `Sign in to YourApp\nAddress: ${addr}\nNonce: ${nonce}`;
     const signature = await walletInstance.signMessage(message);
 
-    const verifyRes = await fetch(`${API}/api/auth/verify`, {
+    const verifyRes = await fetch(`${API}/auth/verify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ address: addr, message, signature }),
@@ -90,13 +90,10 @@ export default function ImportWallet({ onImport }) {
       localStorage.setItem("encryptedWallet", encryptedJson);
       localStorage.setItem("wallet_address", address);
 
-      //Password trolling with this name
-      const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
+      const secret = import.meta.env.VITE_ENCRYPT_KEY;
 
-      // Encrypt the password with the secret
       const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
 
-      // Store in sessionStorage
       sessionStorage.setItem("c_aP", ciphertext);
 
 

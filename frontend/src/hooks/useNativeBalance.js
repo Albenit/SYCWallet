@@ -4,6 +4,7 @@ const useNativeBalance = (address, selectedChain) => {
   const [balance, setBalance] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (!address || !selectedChain) return;
@@ -13,8 +14,7 @@ const useNativeBalance = (address, selectedChain) => {
     const fetchBalance = async () => {
       setLoading(true);
       try {
-        const balRes = await fetch(
-          `http://127.0.0.1:5000/api/wallet/${selectedChain}/native-balance`,
+        const balRes = await fetch(`${apiUrl}/wallet/${selectedChain}/native-balance`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }

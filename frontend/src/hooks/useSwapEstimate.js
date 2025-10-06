@@ -3,7 +3,7 @@ import axios from "axios";
 
 export default function useSwapEstimate(from, to, amount, fromNetwork, toNetwork) {
   
-    
+  const apiUrl = import.meta.env.VITE_API_URL;
   const [data, setData] = useState(null);  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -35,7 +35,7 @@ const networkMap = {
       setError(null);
 
       try {
-            const response = await axios.post("http://127.0.0.1:5000/api/swap/estimate", {
+            const response = await axios.post(apiUrl + "/swap/estimate", {
             params: {
                 from: from.toLowerCase(),
                 fromNetwork: networkFrom,

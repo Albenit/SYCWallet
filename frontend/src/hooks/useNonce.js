@@ -1,12 +1,10 @@
-// src/hooks/useNonce.js
 import { useState, useCallback } from "react";
-
-const API = "http://127.0.0.1:5000"; // Or use your actual API base URL
 
 const useNonce = () => {
   const [nonce, setNonce] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const fetchNonce = useCallback(async (addr) => {
     setLoading(true);
@@ -14,7 +12,7 @@ const useNonce = () => {
     setNonce(null);
 
     try {
-      const nonceRes = await fetch(`${API}/api/auth/nonce`, {
+      const nonceRes = await fetch(`${apiUrl}/auth/nonce`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address: addr }),

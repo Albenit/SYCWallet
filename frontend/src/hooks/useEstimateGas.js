@@ -4,6 +4,7 @@ export default function useEstimateGas() {
   const [feeEstimate, setFeeEstimate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const estimateGas = useCallback(async ({ chainKey, to, from, amount, token, decimals }) => {
     const authToken = localStorage.getItem("auth_token");
@@ -17,8 +18,7 @@ export default function useEstimateGas() {
       setError(null);
       setFeeEstimate(null);
 
-      const res = await fetch(
-        `http://127.0.0.1:5000/api/wallet/${chainKey}/estimateGas`,
+      const res = await fetch(`${apiUrl}/wallet/${chainKey}/estimateGas`,
         {
           method: "POST",
           headers: {

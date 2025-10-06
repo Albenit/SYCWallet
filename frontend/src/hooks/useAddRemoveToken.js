@@ -3,6 +3,7 @@ import { useState } from "react";
 const useAddRemoveToken = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const toggleToken = async (chain, tokenAddress) => {
     setLoading(true);
@@ -12,7 +13,7 @@ const useAddRemoveToken = () => {
       const token = localStorage.getItem("auth_token");
       if (!token) throw new Error("No auth token found");
 
-      const res = await fetch("http://127.0.0.1:5000/api/wallet/toggle-token", {
+      const res = await fetch(apiUrl + "/wallet/toggle-token", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

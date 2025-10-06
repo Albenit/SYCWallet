@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: () => {},
 });
 
-const API = "http://127.0.0.1:5000";
+const API = import.meta.env.VITE_API_URL;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       try {
-        const res = await fetch(`${API}/api/auth/verify-token`, {
+        const res = await fetch(`${API}/auth/verify-token`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

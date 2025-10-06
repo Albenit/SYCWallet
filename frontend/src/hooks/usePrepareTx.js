@@ -4,14 +4,14 @@ export default function usePrepareTx() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const token = localStorage.getItem("auth_token");
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const prepareTx = async (chainKey, txData, walletAddress) => {
     try {
       setLoading(true);
       setError(null);
 
-      const res = await fetch(
-        `http://127.0.0.1:5000/api/wallet/${chainKey}/prepareTx`,
+      const res = await fetch(`${apiUrl}/wallet/${chainKey}/prepareTx`,
         {
           method: "POST",
           headers: {

@@ -42,13 +42,10 @@ export default function CreateNewPassword() {
     localStorage.setItem("encryptedWallet", encryptedJson);
     localStorage.setItem("walletAddress", wallet.address);
 
-    //Password trolling with this name
-    const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
+    const secret = import.meta.env.VITE_ENCRYPT_KEY;
 
-    // Encrypt the password with the secret
     const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
 
-    // Store in sessionStorage
     sessionStorage.setItem("c_aP", ciphertext);
 
     sessionStorage.setItem("tmp_secret_phrase", phrase);

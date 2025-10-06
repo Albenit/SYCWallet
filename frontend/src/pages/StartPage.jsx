@@ -15,13 +15,13 @@ export default function StartPage() {
   const [error, setError] = useState("");
 
 
-  const API = "http://127.0.0.1:5000";
+  const API = import.meta.env.VITE_API_URL;
 
   async function signInWithWallet(wallet) {
     try {
       const addr = await wallet.getAddress ? await wallet.getAddress() : wallet.address;
 
-      const nonceRes = await fetch(`${API}/api/auth/nonce`, {
+      const nonceRes = await fetch(`${API}/auth/nonce`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address: addr }),
@@ -36,7 +36,7 @@ export default function StartPage() {
       const message = `Sign in to YourApp\nAddress: ${addr}\nNonce: ${nonce}`;
       const signature = await wallet.signMessage(message);
 
-      const verifyRes = await fetch(`${API}/api/auth/verify`, {
+      const verifyRes = await fetch(`${API}/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address: addr, message, signature }),
@@ -84,7 +84,8 @@ export default function StartPage() {
       }
 
       //Password trolling with this name
-      const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!"; // fixed secret key
+      const secret = import.meta.env.VITE_ENCRYPT_KEY;
+ // fixed secret key
       const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
       sessionStorage.setItem("c_aP", ciphertext);
 
