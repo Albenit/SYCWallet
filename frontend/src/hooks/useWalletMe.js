@@ -4,6 +4,7 @@ const useWalletMe = () => {
   const [address, setAddress] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
@@ -15,7 +16,7 @@ const useWalletMe = () => {
 
     const fetchAddress = async () => {
       try {
-        const res = await fetch("http://127.0.0.1:5000/api/wallet/me", {
+        const res = await fetch(apiUrl + "/wallet/me", {
           headers: {
             Authorization: `Bearer ${token}`, // Attach token to Authorization header
           },

@@ -18,7 +18,8 @@ export default function ConfirmSecretPhrase() {
   const [submitting, setSubmitting] = useState(false);
 
   const normalize = (s) => s.toLowerCase().trim().split(/\s+/).join(" ");
-  const API = "http://127.0.0.1:5000";
+  const API = import.meta.env.VITE_API_URL;
+
 
   const expectedWords = useMemo(
     () => (originalPhrase ? normalize(originalPhrase).split(" ").length : 0),
@@ -60,7 +61,7 @@ export default function ConfirmSecretPhrase() {
       const wallet = Wallet.fromPhrase(typed);
       const address = wallet.address;
 
-      const nonceRes = await fetch(`${API}/api/auth/nonce`, {
+      const nonceRes = await fetch(`${API}/auth/nonce`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address }),
@@ -76,7 +77,7 @@ export default function ConfirmSecretPhrase() {
       const message = `Sign in to YourApp\nAddress: ${address}\nNonce: ${nonce}`;
       const signature = await wallet.signMessage(message);
 
-      const verifyRes = await fetch(`${API}/api/auth/verify`, {
+      const verifyRes = await fetch(`${API}/auth/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ address, message, signature }),

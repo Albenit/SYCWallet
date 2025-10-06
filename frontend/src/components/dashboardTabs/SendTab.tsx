@@ -59,7 +59,8 @@ export default function SendTab({
       const encryptedJson = localStorage.getItem("encryptedWallet");
       if (!encryptedJson) throw new Error("No wallet found");
 
-      const secret = "6a1!Ka12J!3asd0$0^0348177$AS12$a!";
+      const secret = import.meta.env.VITE_ENCRYPT_KEY;
+
       const password_enc = sessionStorage.getItem("c_aP");
 
       if (!password_enc) throw new Error("No encrypted password found");
@@ -69,7 +70,10 @@ export default function SendTab({
 
       if (!password) throw new Error("Decryption failed");
 
-      const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
+      const wallet = await ethers.Wallet.fromEncryptedJson(
+        encryptedJson,
+        password
+      );
 
       const txData =
         selectedToken.type === "token"
@@ -153,11 +157,11 @@ export default function SendTab({
           {portfolioError && (
             <p className="text-red-500 text-sm">{portfolioError}</p>
           )}
-
-          <div className="space-y-3">
-            {portfolio?.portfolio?.length > 0 ? (
-              portfolio?.portfolio?.map((chain: any) =>
-                chain.items?.map((item: any, idx: number) => (
+          {portfolio?.portfolio?.length > 0 ? (
+            portfolio?.portfolio?.map((chain: any) =>
+              chain.items
+                ?.filter((item: any) => parseFloat(item.balance) > 0)
+                .map((item: any, idx: number) => (
                   <div
                     key={`${chain.chain}-${idx}`}
                     className="px-2 rounded cursor-pointer hover:bg-white/2"
@@ -172,9 +176,7 @@ export default function SendTab({
                         token: item.token,
                         decimals: item.decimals || 18,
                         chainNativeSymbol: chain.nativeSymbol,
-                        balance: item?.balance
-                          ? parseFloat(item.balance).toFixed(4)
-                          : "0.0000",
+                        balance: parseFloat(item.balance).toFixed(4),
                         userAddress: portfolio.address,
                         chainId: chain.chainId,
                       })
@@ -184,21 +186,16 @@ export default function SendTab({
                       icon={item?.logo}
                       chain={chain.chain}
                       symbol={item?.symbol || "UNKNOWN"}
-                      balance={
-                        item?.balance
-                          ? parseFloat(item.balance).toFixed(4)
-                          : "0.0000"
-                      }
+                      balance={parseFloat(item.balance).toFixed(4)}
                     />
                   </div>
                 ))
-              )
-            ) : (
-              <div className="px-6 text-center text-gray-400 text-sm">
-                No tokens added yet.{" "}
-              </div>
-            )}
-          </div>
+            )
+          ) : (
+            <div className="px-6 text-center text-gray-400 text-sm">
+              No tokens added yet.
+            </div>
+          )}
         </>
       )}
 

@@ -4,6 +4,7 @@ const useAllTokens = () => {
   const [tokens, setTokens] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   const fetchTokens = useCallback(async () => {
     setLoading(true);
@@ -13,7 +14,7 @@ const useAllTokens = () => {
       const token = localStorage.getItem("auth_token");
       if (!token) throw new Error("No token found");
 
-      const res = await fetch("http://127.0.0.1:5000/api/wallet/all-tokens", {
+      const res = await fetch(apiUrl + "/wallet/all-tokens", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

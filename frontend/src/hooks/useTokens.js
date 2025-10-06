@@ -4,6 +4,7 @@ export default function useTokens(chainKey) {
   const [tokens, setTokens] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     if (!chainKey) return;
@@ -11,7 +12,7 @@ export default function useTokens(chainKey) {
     const fetchTokens = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/wallet/tokens/${chainKey}`);
+        const res = await fetch(`${apiUrl}/wallet/tokens/${chainKey}`);
         if (!res.ok) throw new Error("Failed to fetch tokens");
         const data = await res.json();
         setTokens(data);
