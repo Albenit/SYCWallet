@@ -91,7 +91,7 @@ export default function ConfirmSecretPhrase() {
 
       try {
         sessionStorage.removeItem("tmp_secret_phrase");
-      } catch { }
+      } catch { /* ignore */ }
       const verifyData = await verifyRes.json()
 
       login(verifyData.token); 

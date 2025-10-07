@@ -29,7 +29,7 @@ export default function SecretPhrases() {
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(words.join(" "));
-    } catch (e) {
+    } catch {
       // fallback
       const ta = document.createElement("textarea");
       ta.value = words.join(" ");

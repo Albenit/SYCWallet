@@ -18,42 +18,38 @@ export default function StartPage() {
   const API = import.meta.env.VITE_API_URL;
 
   async function signInWithWallet(wallet) {
-    try {
-      const addr = await wallet.getAddress ? await wallet.getAddress() : wallet.address;
+    const addr = (wallet.getAddress ? await wallet.getAddress() : wallet.address);
 
-      const nonceRes = await fetch(`${API}/auth/nonce`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: addr }),
-        credentials: "include",
-      });
-      if (!nonceRes.ok) {
-        const t = await nonceRes.text().catch(() => "");
-        throw new Error(t || "Could not get nonce");
-      }
-      const { nonce } = await nonceRes.json();
-
-      const message = `Sign in to YourApp\nAddress: ${addr}\nNonce: ${nonce}`;
-      const signature = await wallet.signMessage(message);
-
-      const verifyRes = await fetch(`${API}/auth/verify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address: addr, message, signature }),
-        credentials: "include",
-      });
-      if (!verifyRes.ok) {
-        const t = await verifyRes.text().catch(() => "");
-        throw new Error(t || "Verification failed");
-      }
-      const data = await verifyRes.json();
-
-      login(data.token); 
-
-      return data;
-    } catch (e) {
-      throw e;
+    const nonceRes = await fetch(`${API}/auth/nonce`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address: addr }),
+      credentials: "include",
+    });
+    if (!nonceRes.ok) {
+      const t = await nonceRes.text().catch(() => "");
+      throw new Error(t || "Could not get nonce");
     }
+    const { nonce } = await nonceRes.json();
+
+    const message = `Sign in to YourApp\nAddress: ${addr}\nNonce: ${nonce}`;
+    const signature = await wallet.signMessage(message);
+
+    const verifyRes = await fetch(`${API}/auth/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address: addr, message, signature }),
+      credentials: "include",
+    });
+    if (!verifyRes.ok) {
+      const t = await verifyRes.text().catch(() => "");
+      throw new Error(t || "Verification failed");
+    }
+    const data = await verifyRes.json();
+
+    login(data.token);
+
+    return data;
   }
 
   async function handleLogin(e) {
