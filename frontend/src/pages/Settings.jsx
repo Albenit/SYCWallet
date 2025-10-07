@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import coinAvatar from "../assets/svg/coinAvatar.svg";
 import { useNavigate } from "react-router-dom";
 import { Copy, Home, Clock, Settings as SettingsIcon } from "lucide-react";
