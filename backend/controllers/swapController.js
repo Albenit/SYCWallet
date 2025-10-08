@@ -4,7 +4,6 @@ const { getPrices } = require("../utils/prices");
 
 exports.estimate = async (req, res) => {
     try {
-        // Accept both GET (req.query) and POST (req.body.params)
         const p = req.body?.params || req.query || {};
 
         const from = (p.from || '').toString();
@@ -20,7 +19,6 @@ exports.estimate = async (req, res) => {
             });
         }
 
-            // Primary: ChangeNOW estimate (may not support testnets like sepolia)
             try {
                 const url = `https://vip-api.changenow.io/v1.6/exchange/estimate`;
                 const response = await axios.get(url, {
@@ -38,7 +36,6 @@ exports.estimate = async (req, res) => {
                 });
                 return res.json(response.data);
             } catch (aggErr) {
-                // Fallback: approximate using Binance prices (for dev/testnets)
                 const symFrom = (from || '').toUpperCase();
                 const symTo = (to || '').toUpperCase();
 
@@ -50,7 +47,6 @@ exports.estimate = async (req, res) => {
                 const pTo = priceMap[toTicker];
 
                 if (!pFrom || !pTo) {
-                    // rethrow original aggregator error if we can't price
                     throw aggErr;
                 }
 

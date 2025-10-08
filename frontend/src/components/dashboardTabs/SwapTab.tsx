@@ -11,24 +11,21 @@ import useSendTransaction from "../../hooks/useSendTransaction";
 import { sendTransactionError } from "../../utils/errorUtils";
 import ERC20_ABI from "../../abis/erc20.json";
 
-// Vite env typing shim for TS
 const env: any = (import.meta as any).env;
-
 
 const ROUTERS: Record<string, string> = {
   ethereum: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", 
   polygon: "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff", 
-  bsc: "0x10ED43C718714eb63d5aA57B78B54704E256024E", // PancakeSwap
-  avalanche: "0x60aE616a2155Ee3d9A68541Ba4544862310933d4", // TraderJoe
-  fantom: "0xF491e7B69E4244ad4002BC14e878a34207E38c29", // SpookySwap
-  arbitrum: "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506", // SushiSwap
-  gnosis: "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77", // Honeyswap
-  base: "0x2626664c2603336E57B271c5C0b26F421741e481", // Uniswap Base
-  zksync: "0x3a1D87f206D12415f5b0A33E786967680AAb4f6d", // SyncSwap
-  sepolia: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", // Testnet
+  bsc: "0x10ED43C718714eb63d5aA57B78B54704E256024E", 
+  avalanche: "0x60aE616a2155Ee3d9A68541Ba4544862310933d4", 
+  fantom: "0xF491e7B69E4244ad4002BC14e878a34207E38c29", 
+  arbitrum: "0x1b02da8cb0d097eb8d57a175b88c7d8b47997506", 
+  gnosis: "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77", 
+  base: "0x2626664c2603336E57B271c5C0b26F421741e481", 
+  zksync: "0x3a1D87f206D12415f5b0A33E786967680AAb4f6d", 
+  sepolia: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D", 
 };
 
-// Minimal interface to query router's WETH address dynamically
 const ROUTER_INFO_ABI = [
   "function WETH() view returns (address)",
 ];
@@ -45,26 +42,18 @@ async function getWrappedNative(chainKey: string): Promise<string> {
   return weth;
 }
 
-/* ---------------------------------------------------
-   Uniswap-style ABI
---------------------------------------------------- */
+
 const UNISWAP_V2_ROUTER_ABI = [
   "function swapExactTokensForTokens(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) external returns (uint[] memory amounts)",
   "function swapExactETHForTokens(uint amountOutMin,address[] calldata path,address to,uint deadline) external payable returns (uint[] memory amounts)",
   "function swapExactTokensForETH(uint amountIn,uint amountOutMin,address[] calldata path,address to,uint deadline) external returns (uint[] memory amounts)",
 ];
 
-/* ---------------------------------------------------
-   Utility: serialize BigInts for JSON
---------------------------------------------------- */
 const serializeTx = (obj: any) =>
   JSON.parse(
     JSON.stringify(obj, (_, v) => (typeof v === "bigint" ? v.toString() : v))
   );
 
-/* ===================================================
-   MAIN COMPONENT
-=================================================== */
 export default function SwapTab() {
   const [fromChain, setFromChain] = useState<any>(null);
   const [toChain, setToChain] = useState<any>(null);
@@ -91,9 +80,6 @@ export default function SwapTab() {
   const d: any = data as any;
   const toAmount = String(d?.estimatedAmount ?? d?.toAmount ?? d?.summary?.estimatedAmount ?? "");
 
-  /* ---------------------------------------------------
-     MAIN SWAP HANDLER
-  --------------------------------------------------- */
   const handleSwap = async () => {
     try {
       if (!fromChain || !toChain)
@@ -105,7 +91,6 @@ export default function SwapTab() {
 
       setSwapping(true);
 
-      // decrypt wallet
       const encryptedJson = localStorage.getItem("encryptedWallet");
       if (!encryptedJson) throw new Error("No wallet found");
   const secret = env?.VITE_ENCRYPT_KEY;
@@ -115,43 +100,75 @@ export default function SwapTab() {
       const password = bytes.toString(CryptoJS.enc.Utf8);
       const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
 
-      // cross-chain swap => Socket bridge
       if (fromChain.key !== toChain.key) {
         await handleCrossChainSwap(wallet);
         return;
       }
 
-      // same-chain swap
       const chainKey = fromChain.key;
-      const router = ROUTERS[chainKey];
-      if (!router) throw new Error(`No router for ${fromChain.label}`);
-
       const isNativeIn = !fromToken?.address || fromToken?.native;
       const isNativeOut = !toToken?.address || toToken?.native;
       if (isNativeIn && isNativeOut) {
         throw new Error("Swapping native to native is not supported. Select a token.");
       }
 
+      // Resolve tokens for SwapKit (use wrapped native when needed)
+      const srcToken = isNativeIn ? await getWrappedNative(chainKey) : fromToken.address;
+      const dstToken = isNativeOut ? await getWrappedNative(chainKey) : toToken.address;
+      const amountInStr = ethers.parseUnits(fromAmount, fromToken.decimals || 18).toString();
+
+      // Try SwapKit same-chain first
+      try {
+        const res = await fetch(`${env.VITE_API_URL}/swapkit/swap`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fromChainId: fromChain.chainId,
+            toChainId: toChain.chainId,
+            fromTokenAddress: srcToken,
+            toTokenAddress: dstToken,
+            amount: amountInStr,
+            fromAddress: wallet.address,
+            toAddress: wallet.address,
+            slippage: 1,
+          }),
+        });
+        const sk = await res.json();
+        if (!res.ok) throw new Error(sk?.error || "SwapKit error");
+        const tx = sk?.tx || sk?.result?.tx;
+        if (tx?.to && tx?.data) {
+          const baseTx: any = { to: tx.to, data: tx.data };
+          if (tx.value) baseTx.value = tx.value;
+          const prepared = await prepareTx(chainKey, baseTx, wallet.address);
+          const signed = await wallet.signTransaction(serializeTx(prepared));
+          const sent = await broadcastTx(chainKey, signed);
+          Swal.fire({
+            title: "Swap submitted",
+            text: `Transaction hash: ${sent.hash}`,
+            icon: "success",
+            background: "#02010C",
+            color: "#fff",
+          });
+          setFromAmount("");
+          return;
+        }
+      } catch (skErr) {
+        console.warn("SwapKit same-chain failed, falling back to router", skErr);
+      }
+
+      // Fallback: Uniswap-style router
+      const router = ROUTERS[chainKey];
+      if (!router) throw new Error(`No router for ${fromChain.label}`);
       const amountIn = ethers.parseUnits(fromAmount, fromToken.decimals || 18);
-      const minOut = 0n; // TODO: get from quote/allow slippage
       const deadline = Math.floor(Date.now() / 1000) + 600;
+      const path: string[] = [srcToken, dstToken];
 
-  const wrapped = await getWrappedNative(chainKey);
-
-      const path: string[] = (() => {
-        if (isNativeIn && !isNativeOut) return [wrapped, toToken.address];
-        if (!isNativeIn && isNativeOut) return [fromToken.address, wrapped];
-        return [fromToken.address, toToken.address];
-      })();
-
-      // 1) Approve if needed (ERC20 input)
       if (!isNativeIn) {
         const iface = new ethers.Interface(ERC20_ABI as any);
         const approveData = iface.encodeFunctionData("approve", [router, ethers.MaxUint256]);
         const preparedApprove = await prepareTx(chainKey, { to: fromToken.address, data: approveData }, wallet.address);
         const signedApprove = await wallet.signTransaction(serializeTx(preparedApprove));
         const approveRes = await broadcastTx(chainKey, signedApprove);
-        // Optional UX: Notify approval
         await Swal.fire({
           title: "Approval sent",
           text: `Tx: ${approveRes.hash}`,
@@ -163,27 +180,21 @@ export default function SwapTab() {
         });
       }
 
-      // 2) Build router call
       const routerIface = new ethers.Interface(UNISWAP_V2_ROUTER_ABI as any);
       const fn = isNativeIn
         ? "swapExactETHForTokens"
         : isNativeOut
         ? "swapExactTokensForETH"
         : "swapExactTokensForTokens";
-
       const args = fn === "swapExactETHForTokens"
-        ? [minOut, path, wallet.address, deadline]
-        : [amountIn, minOut, path, wallet.address, deadline];
-
-      const dataEncoded = routerIface.encodeFunctionData(fn, args);
-  const baseTx: any = { to: router, data: dataEncoded };
-  if (isNativeIn) baseTx.value = amountIn.toString(); // send native value as decimal string
-
-      // 3) Prepare (gas/nonce/chainId) on backend then sign and broadcast
+        ? [0n, path, wallet.address, deadline]
+        : [amountIn, 0n, path, wallet.address, deadline];
+      const dataEnc = routerIface.encodeFunctionData(fn, args);
+      const baseTx: any = { to: router, data: dataEnc };
+      if (isNativeIn) baseTx.value = amountIn.toString();
       const prepared = await prepareTx(chainKey, baseTx, wallet.address);
       const signed = await wallet.signTransaction(serializeTx(prepared));
       const sent = await broadcastTx(chainKey, signed);
-
       Swal.fire({
         title: "Swap submitted",
         text: `Transaction hash: ${sent.hash}`,
@@ -191,7 +202,6 @@ export default function SwapTab() {
         background: "#02010C",
         color: "#fff",
       });
-
       setFromAmount("");
     } catch (err: any) {
       console.error(err);
@@ -207,37 +217,44 @@ export default function SwapTab() {
     }
   };
 
-  /* ---------------------------------------------------
-     CROSS-CHAIN (Socket.tech)
-  --------------------------------------------------- */
   const handleCrossChainSwap = async (wallet: any) => {
     try {
-      const res = await fetch("https://api-devnet.socket.tech/v2/quote", {
+      const srcToken = fromToken.address || (await getWrappedNative(fromChain.key));
+      const dstToken = toToken.address || (await getWrappedNative(toChain.key));
+      const amount = ethers.parseUnits(fromAmount, fromToken.decimals || 18).toString();
+
+      const res = await fetch(`${env.VITE_API_URL}/swapkit/swap`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "API-KEY": env?.VITE_SOCKET_API_KEY,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fromChainId: fromChain.chainId,
           toChainId: toChain.chainId,
-          fromTokenAddress: fromToken.address || (await getWrappedNative(fromChain.key)),
-          toTokenAddress: toToken.address || (await getWrappedNative(toChain.key)),
-          amount: ethers.parseUnits(fromAmount, fromToken.decimals || 18).toString(),
-          userAddress: wallet.address,
+          fromTokenAddress: srcToken,
+          toTokenAddress: dstToken,
+          amount,
+          fromAddress: wallet.address,
+          toAddress: wallet.address,
+          slippage: 1, // 1%
         }),
       });
 
-      const quote = await res.json();
-      if (!quote.result?.tx) throw new Error("No route found via Socket");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "SwapKit request failed");
 
-      const tx = quote.result.tx;
-      const provider = new ethers.JsonRpcProvider(env?.[`VITE_RPC_${fromChain.key.toUpperCase()}`]);
-      const walletConn = wallet.connect(provider);
-      const txHash = await walletConn.sendTransaction(tx);
+      // Accept common shapes: { tx: {...} } or { result: { tx: {...} } }
+      const tx = data?.tx || data?.result?.tx;
+      if (!tx?.to || !tx?.data) throw new Error("SwapKit did not return a valid transaction");
+
+      // Prepare/sign/broadcast via backend on source chain
+      const baseTx: any = { to: tx.to, data: tx.data };
+      if (tx.value) baseTx.value = tx.value;
+      const prepared = await prepareTx(fromChain.key, baseTx, wallet.address);
+      const signed = await wallet.signTransaction(serializeTx(prepared));
+      const sent = await broadcastTx(fromChain.key, signed);
+
       Swal.fire({
         title: "Bridge initiated",
-        text: `Tx: ${txHash.hash}`,
+        text: `Tx: ${sent.hash}`,
         icon: "info",
         background: "#02010C",
         color: "#fff",
@@ -248,9 +265,6 @@ export default function SwapTab() {
     }
   };
 
-  /* ---------------------------------------------------
-     UI Helpers
-  --------------------------------------------------- */
   const swapSides = () => {
     const tempC = fromChain;
     const tempT = fromToken;
@@ -260,13 +274,10 @@ export default function SwapTab() {
     setToToken(tempT);
   };
 
-  /* ---------------------------------------------------
-     RENDER
-  --------------------------------------------------- */
   return (
     <div className="space-y-4 max-w-sm mx-auto">
       {/* FROM */}
-      <div className="bg-[#02080E8C] rounded-xl p-4">
+      <div className="bg-[#02080E8C] rounded-xl p-4 mb-0">
         <div className="flex items-center gap-2 mb-3">
           <p className="text-sm text-gray-400">From</p>
           {fromChain?.logo && <img src={fromChain.logo} alt="" width={15} height={15} />}
