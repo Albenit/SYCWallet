@@ -15,10 +15,6 @@ const chainProviders = {
         type: "alchemy",
         network: Network.ETH_MAINNET
     },
-    sepolia: {
-        type: "alchemy",
-        network: Network.ETH_SEPOLIA
-    },
     polygon: {
         type: "alchemy",
         network: Network.MATIC_MAINNET
@@ -35,7 +31,6 @@ const chainProviders = {
         type: "alchemy",
         network: Network.ZKSYNC_MAINNET
     },
-
     bsc: {
         type: "etherscan",
         url: "https://api.bscscan.com/api",
@@ -44,16 +39,6 @@ const chainProviders = {
     avalanche: {
         type: "etherscan",
         url: "https://api.snowtrace.io/api",
-        key: "RMARB2SJUQJCSQG3Z4K5NCCK3II7C18AKG"
-    },
-    fantom: {
-        type: "covalent",
-        chainId: 250,
-        key: "cqt_rQGtfY8G3pjFbQTPjdmkHggjBmbG"
-    },
-    gnosis: {
-        type: "etherscan",
-        url: "https://api.gnosisscan.io/api",
         key: "RMARB2SJUQJCSQG3Z4K5NCCK3II7C18AKG"
     },
 };

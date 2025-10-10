@@ -1,61 +1,52 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function useSwapEstimate(from, to, amount, fromNetwork, toNetwork) {
-  const apiUrl = import.meta.env.VITE_API_URL;
+/**
+ * Fetches a quote from your backend, which in turn calls SwapKit.
+ * Automatically sends correct from/to chain and token info.
+ */
+export default function useSwapEstimate(fromAsset, toAsset, amount, fromChain, toChain, walletAddress) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const networkMap = useMemo(() => ({
-    ethereum: "eth",
-    sepolia: "sepolia",
-    polygon: "pol",
-    bsc: "bsc",
-    arbitrum: "arbitrum",
-    avalanche: "avax_cchain",
-    fantom: "fantom",
-    gnosis: "gnosis",
-    base: "base",
-    zksync: "zksync",
-  }), []);
-
-  const networkFrom = networkMap[fromNetwork] || fromNetwork;
-  const networkTo = networkMap[toNetwork] || toNetwork;
-
   useEffect(() => {
-    const amt = Number(amount);
-    if (!from || !to || !fromNetwork || !toNetwork || !amt || !(amt > 0)) {
-      setData(null);
-      setError(null);
-      return;
-    }
+    if (
+      !fromAsset ||
+      !toAsset ||
+      !fromChain ||
+      !toChain ||
+      !walletAddress ||
+      !amount ||
+      Number(amount) <= 0
+    ) return;
 
-    const fetchEstimate = async () => {
+    const fetchQuote = async () => {
       setLoading(true);
       setError(null);
       try {
-        const params = {
-          from: String(from).toLowerCase(),
-          to: String(to).toLowerCase(),
-          amount: amt,
-          fromNetwork: networkFrom,
-          toNetwork: networkTo,
-        };
-
-        // Use GET with query params to match backend flexibility
-        const response = await axios.get(`${apiUrl}/swap/estimate`, { params });
-        setData(response.data);
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/swapkit/quote`, {
+          sellAsset: fromAsset,
+          buyAsset: toAsset,
+          sellAmount: amount.toString(),
+          sourceAddress: walletAddress,
+          destinationAddress: walletAddress,
+          slippage: 1,
+          includeTx: false,
+          fromChain,
+          toChain,
+        });
+        setData(res.data);
       } catch (err) {
-        setError(err.response?.data?.message || err.message);
-        setData(null);
+        console.error("❌ SwapKit quote failed:", err.response?.data || err.message);
+        setError(err.response?.data || err.message);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEstimate();
-  }, [from, to, amount, fromNetwork, toNetwork, apiUrl, networkFrom, networkTo]);
+    fetchQuote();
+  }, [fromAsset, toAsset, amount, fromChain, toChain, walletAddress]);
 
   return { data, loading, error };
 }
