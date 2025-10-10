@@ -77,6 +77,8 @@ export default function SwapTab() {
         return Swal.fire("Missing token", "Please select both tokens.", "warning");
       if (!fromAmount || Number(fromAmount) <= 0)
         return Swal.fire("Invalid amount", "Enter a valid amount to swap.", "warning");
+      if (!firstRoute)
+        return Swal.fire("No route", "SwapKit did not return a swap route.", "warning");
 
 
       setSwapping(true);
@@ -94,21 +96,24 @@ export default function SwapTab() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fromChainId: fromChain.chainId,
-          toChainId: toChain.chainId,
-          fromTokenAddress: fromToken.address,
-          toTokenAddress: toToken.address,
-          amount: ethers.parseUnits(fromAmount, fromToken.decimals || 18).toString(),
-          fromAddress: wallet.address,
-          toAddress: wallet.address,
+          sellAsset: fromToken,
+          buyAsset: toToken,
+          sellAmount: String(fromAmount),
+          sourceAddress: wallet.address,
+          destinationAddress: wallet.address,
           slippage: 1,
+          fromChain: fromChain.key,
+          toChain: toChain.key,
+          routeIndex: 0,
+          routeTag: firstRoute?.meta?.tags?.[0],
+          quoteId: d?.quoteId,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "SwapKit request failed");
 
-      const tx = data?.tx || data?.result?.tx;
+      const tx = data?.tx || data?.route?.tx || data?.result?.tx;
       if (!tx?.to || !tx?.data) throw new Error("SwapKit did not return a valid transaction");
 
       const baseTx: any = { to: tx.to, data: tx.data };
