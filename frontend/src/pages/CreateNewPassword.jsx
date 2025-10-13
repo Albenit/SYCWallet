@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { ethers } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
 import Steps from "../components/Steps";
-import CryptoJS from "crypto-js";
 
 export default function CreateNewPassword() {
   const [password, setPassword] = useState("");
@@ -20,11 +19,8 @@ export default function CreateNewPassword() {
       return;
     }
 
-    const strongEnough =
-      password.length >= 8 &&
-      /[A-Z]/.test(password) &&
-      /\d/.test(password) &&
-      /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const strongEnough = password.length >= 8 && /[A-Z]/.test(password) && /\d/.test(password) && /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
     if (!strongEnough) {
       alert("Please meet the password rules before continuing.");
       return;
@@ -38,20 +34,11 @@ export default function CreateNewPassword() {
       return;
     }
 
-    const encryptedJson = await wallet.encrypt(password);
-    localStorage.setItem("encryptedWallet", encryptedJson);
-    localStorage.setItem("walletAddress", wallet.address);
-
-    const secret = import.meta.env.VITE_ENCRYPT_KEY;
-
-    const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
-
-    sessionStorage.setItem("c_aP", ciphertext);
-
-    sessionStorage.setItem("tmp_secret_phrase", phrase);
-
     navigate("/secret-phrases", {
-      state: { phrase, address: wallet.address },
+      state: { 
+        phrase:phrase,
+        password: password
+      },
       replace: true,
     });
   };

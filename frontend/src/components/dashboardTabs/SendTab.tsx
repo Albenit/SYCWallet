@@ -13,7 +13,7 @@ import CryptoJS from "crypto-js";
 interface SendTabProps {
   portfolio: any;
   portfolioLoading: boolean;
-  portfolioError: string | null;
+  portfolioError: string | null;  
   refetchPortfolio: () => void;
 }
 
@@ -158,10 +158,13 @@ export default function SendTab({
             <p className="text-red-500 text-sm">{portfolioError}</p>
           )}
           {portfolio?.portfolio?.length > 0 ? (
-            portfolio?.portfolio?.map((chain: any) =>
-              chain.items
-                ?.filter((item: any) => parseFloat(item.balance) > 0)
-                .map((item: any, idx: number) => (
+            portfolio.portfolio.map((chain: any) => {
+              const nonZeroItems = chain.items.filter(
+                (item: any) => parseFloat(item.balance) > 0
+              );
+
+              return nonZeroItems.length > 0 ? (
+                nonZeroItems.map((item: any, idx: number) => (
                   <div
                     key={`${chain.chain}-${idx}`}
                     className="px-2 rounded cursor-pointer hover:bg-white/2"
@@ -183,14 +186,22 @@ export default function SendTab({
                     }
                   >
                     <Row
-                      icon={item?.logo}
+                      icon={item.logo}
                       chain={chain.chain}
-                      symbol={item?.symbol || "UNKNOWN"}
+                      symbol={item.symbol || "UNKNOWN"}
                       balance={parseFloat(item.balance).toFixed(4)}
                     />
                   </div>
                 ))
-            )
+              ) : (
+                <div
+                  key={chain.chain}
+                  className="px-6 text-center text-gray-400 text-sm"
+                >
+                  No assets with balance.
+                </div>
+              );
+            })
           ) : (
             <div className="px-6 text-center text-gray-400 text-sm">
               No tokens added yet.

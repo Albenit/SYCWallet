@@ -30,10 +30,15 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
         {portfolio?.portfolio?.length > 0 ? (
           portfolio.portfolio.map((chain: any) =>
             chain.items?.map((item: any, idx: any) => {
-              const livePrice = livePrices[item.binanceSymbol];
+              let  livePrice = livePrices[item.binanceSymbol];
+
+              if (!livePrice && ["USDT", "USDC", "DAI"].includes(item.symbol?.toUpperCase())){
+                livePrice = { price: 1, change: 0 }; 
+              }
+              
               const usdValue = livePrice
-                ? (parseFloat(item.balance) * livePrice.price).toFixed(3)
-                : (item.usdValue || 0).toFixed(3);
+                ? (parseFloat(item.balance) * livePrice.price).toFixed(4)
+                : (item.usdValue || 0).toFixed(4);
 
               return (
                 <div key={`${chain.chain}-${idx}`}>
@@ -41,9 +46,9 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
                     icon={item?.logo}
                     chain={chain.chain}
                     symbol={item?.symbol || "UNKNOWN"}
-                    priceUsd={livePrice ? livePrice.price.toFixed(2) : "0.00"}
+                    priceUsd={livePrice ? livePrice.price : "0.00"}
                     change={livePrice ? livePrice.change : 0}
-                    balance={item?.balance ? parseFloat(item.balance).toFixed(4) : "0.0000"}
+                    balance={item?.balance ? item.balance : "0.0000"}
                     usdValue={usdValue}
                   />
                 </div>
