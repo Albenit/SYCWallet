@@ -1,17 +1,18 @@
 import React, { useState, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Wallet } from "ethers"; // v6
+import { Wallet } from "ethers"; 
 import Steps from "../components/Steps";
 import PageLayout from "../components/layouts/PageLayout";
 import { useAuth } from "../context/AuthContext";
+import CryptoJS from "crypto-js";
 
 export default function ConfirmSecretPhrase() {
   const { login } = useAuth();  
   const navigate = useNavigate();
   const location = useLocation();
 
-  // original phrase passed from previous step (ephemeral, not persisted server-side)
-  const originalPhrase = (location.state && location.state.mnemonic) || "";
+  const originalPhrase = (location.state && location.state.phrase) || "";
+  const password = (location.state && location.state.password) || "";
 
   const [input, setInput] = useState("");
   const [error, setError] = useState("");
@@ -19,7 +20,6 @@ export default function ConfirmSecretPhrase() {
 
   const normalize = (s) => s.toLowerCase().trim().split(/\s+/).join(" ");
   const API = import.meta.env.VITE_API_URL;
-
 
   const expectedWords = useMemo(
     () => (originalPhrase ? normalize(originalPhrase).split(" ").length : 0),
@@ -43,7 +43,6 @@ export default function ConfirmSecretPhrase() {
     }
 
     try {
-      // Throws if invalid mnemonic
       Wallet.fromPhrase(typed);
     } catch {
       setError("This recovery phrase is not valid. Check spelling and order.");
@@ -55,7 +54,6 @@ export default function ConfirmSecretPhrase() {
       return;
     }
 
-    // ===== SUCCESS PATH =====
     setSubmitting(true);
     try {
       const wallet = Wallet.fromPhrase(typed);
@@ -89,14 +87,19 @@ export default function ConfirmSecretPhrase() {
         throw new Error(t || "Verification failed");
       }
 
-      try {
-        sessionStorage.removeItem("tmp_secret_phrase");
-      } catch { /* ignore */ }
       const verifyData = await verifyRes.json()
 
       login(verifyData.token); 
 
       setInput("");
+      const encryptedJson = await wallet.encrypt(password);
+
+      localStorage.setItem("encryptedWallet", encryptedJson);
+      localStorage.setItem("walletAddress", wallet.address);
+
+      const secret = import.meta.env.VITE_ENCRYPT_KEY;
+      const ciphertext = CryptoJS.AES.encrypt(password, secret).toString();
+      sessionStorage.setItem("c_aP", ciphertext);
 
       navigate("/dashboard");
     } catch (e) {
