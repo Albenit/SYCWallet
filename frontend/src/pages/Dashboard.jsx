@@ -131,7 +131,7 @@ export default function Dashboard() {
           {tab === "token" && (<TokensTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} refetchPortfolio={refetchPortfolio} livePrices={livePrices} />)}
           {tab === "send" && (<SendTab portfolio={portfolio} portfolioLoading={portfolioLoading} portfolioError={portfolioError} refetchPortfolio={refetchPortfolio} />)}
           {tab === "swap" && <SwapTab />}
-          {tab === "receive" && <ReceiveTab address={address} handleCopy={handleCopy} />}
+          {tab === "receive" && <ReceiveTab address={address} handleCopy={handleCopy} copied={copied} />}
         </div>
       </div>
       <Navbar />

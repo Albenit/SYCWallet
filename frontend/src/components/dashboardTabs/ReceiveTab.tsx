@@ -4,9 +4,10 @@ import { Copy } from "lucide-react";
 interface ReceiveTabProps {
   address: string | null;
   handleCopy: () => void;
+  copied: boolean;
 }
 
-export default function ReceiveTab({ address, handleCopy }: ReceiveTabProps) {
+export default function ReceiveTab({ address, handleCopy, copied}: ReceiveTabProps) {
   return (
     <div className="flex flex-col items-center gap-4">
       <QRCode value={address || "0x..."} size={160} bgColor="#0A0A1A" fgColor="#ffffff" />
@@ -14,7 +15,11 @@ export default function ReceiveTab({ address, handleCopy }: ReceiveTabProps) {
       <div className="flex items-center gap-2 bg-[#02080E8C] px-3 py-2 rounded-md">
         <span className="text-xs break-all p-1">{address || "0x..."}</span>
         <button onClick={handleCopy}>
-          <Copy size={14} className="opacity-60 hover:opacity-100 cursor-pointer" />
+          {copied ? (
+            <span className="text-xs text-green-400">Copied!</span>
+          ) : (
+            <Copy size={16} className="opacity-60 group-hover:opacity-100 cursor-pointer"  />
+          )}
         </button>
       </div>
     </div>

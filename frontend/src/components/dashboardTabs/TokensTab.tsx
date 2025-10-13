@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import Row from "../partials/Row";
-import plusIcon from "../../assets/svg/plusIcon.svg";
+import { Plus } from "lucide-react";
 import AllTokensModal from "./partials/AllTokensModal";
 
 export default function TokensTab({portfolio,portfolioLoading,portfolioError,refetchPortfolio,livePrices}: any) {
@@ -16,12 +16,9 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
 
   return (
     <div className="space-y-4">
-      <div
-        className="flex justify-end gap-2 text-sm text-blue-400 font-medium cursor-pointer"
-        onClick={openModal}
-      >
-        <span>
-          <img src={plusIcon} alt="add" />
+      <div className="flex justify-end gap-2">
+        <span onClick={openModal}>
+          <Plus size={24} className="cursor-pointer"/>
         </span>
       </div>
 
