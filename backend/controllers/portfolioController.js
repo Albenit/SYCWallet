@@ -3,7 +3,6 @@ const { ethers } = require("ethers");
 const { getProvider } = require('../chain/providers');
 const ERC20_ABI = require('../chain/erc20');
 const CHAINS = require("../chain/config");
-const { getPrices } = require("../utils/prices");
 const UserToken = require('../models/userToken');
 const User = require('../models/User');
 

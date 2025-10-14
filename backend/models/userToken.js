@@ -12,7 +12,7 @@ const userTokenSchema = new mongoose.Schema({
   },
   tokenAddress: {
     type: String,
-    default: null  // allow native tokens with null
+    default: null 
   },
   symbol: {
     type: String,

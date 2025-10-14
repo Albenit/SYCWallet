@@ -7,7 +7,7 @@ module.exports = function auth(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = { address: payload.address }; // checksum cased from your verify()
+    req.user = { address: payload.address }; 
     return next();
   } catch (e) {
     return res.status(401).json({ error: 'bad_token' });
