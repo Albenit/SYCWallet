@@ -5,6 +5,7 @@ import { Wallet } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
 import CryptoJS from "crypto-js";
 import { useAuth } from "../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -16,6 +17,7 @@ export default function ImportWallet({ onImport }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
 
 
   const placeholder =
@@ -113,12 +115,10 @@ export default function ImportWallet({ onImport }) {
   return (
     <PageLayout>
       <div className="px-6 pt-6">
-        {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
         </div>
 
-        {/* Tabs */}
         <div className="flex items-center justify-center gap-12 mb-6">
           <button
             type="button"
@@ -133,21 +133,6 @@ export default function ImportWallet({ onImport }) {
                 }`}
             />
           </button>
-          <button
-            type="button"
-            onClick={() => setTab("private")}
-            className={`text-lg font-medium transition-colors cursor-pointer ${tab === "private" ? "text-blue-300" : "text-gray-300/80"
-              }`}
-            aria-pressed={tab === "private"}
-          >
-            <span>Private Key</span>
-            <div
-              className={`mt-2 h-[2px] mx-auto w-16 transition-all ${tab === "private" ? "bg-gradient-to-r from-[#3B82F6] to-[#5EE2FF]" : "bg-transparent"
-                }`}
-            />
-          </button>
-
-
         </div>
 
         {/* Form */}
@@ -166,13 +151,22 @@ export default function ImportWallet({ onImport }) {
           {/* Password to encrypt the wallet JSON locally */}
           <div className="mt-4">
             <label className="block text-gray-300/80 mb-2">Encryption Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Choose a strong password (min 8 chars)"
-              className="w-full bg-[#02080E8C] rounded-md p-3 text-gray-200 placeholder:text-gray-400 focus:outline-none  "
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                placeholder="Choose a strong password (min 8 chars)"
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 rounded bg-[#02080E8C]   focus:outline-none"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-4 text-gray-400 cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             <p className="text-xs text-gray-400 mt-2">
               This password encrypts the wallet JSON stored in your browser. Keep it safe — it cannot be recovered without your seed phrase.
             </p>
