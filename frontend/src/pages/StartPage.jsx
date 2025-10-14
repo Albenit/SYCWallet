@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 import PageLayout from "../components/layouts/PageLayout";
 import CryptoJS from "crypto-js";
 import { useAuth } from "../context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function StartPage() {
   const { login } = useAuth(); 
@@ -12,6 +13,7 @@ export default function StartPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
 
   const API = import.meta.env.VITE_API_URL;
@@ -108,25 +110,29 @@ export default function StartPage() {
         </div>
 
         <form className="space-y-4" onSubmit={handleLogin}>
-          <div>
-            <label className="block mb-1 text-sm text-gray-300">Password</label>
+          <div className="relative">
             <input
-              type="password"
-              placeholder="Enter your password"
+              type={showPassword ? "text" : "password"}
               value={password}
+              placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white placeholder-gray-400 border border-white/10 focus:outline-none"
+              className="w-full p-3 rounded bg-[#02080E8C]   focus:outline-none"
             />
+            <button
+              type="button"
+              className="absolute right-3 top-4 text-gray-400 cursor-pointer"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
-
           {error && <div className="text-red-400 text-sm">{error}</div>}
-
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-md bg-blue-600 py-3 font-semibold hover:bg-blue-700 transition disabled:opacity-60 cursor-pointer"
           >
-            {loading ? "Logging in…" : "Login"}
+            {loading ? "Unlocking…" : "Unlock"}
           </button>
         </form>
 
