@@ -7,7 +7,6 @@ const partialsController = require('../controllers/partialsController');
 
 const router = express.Router();
 
-// Who am I?
 router.get('/me', auth, async (req, res) => {
   res.json({ address: req.user.address });
 });
@@ -19,8 +18,6 @@ router.get("/:chain/token-balance", auth, walletController.getTokenBalance);
 
 router.get("/:chain/account", auth, walletController.getAccountBasic);
 
-
-
 // Portfolio (native + tokens)
 router.get("/chain/portfolio", auth, portfolioController.getPortfolio);
 router.get("/all-tokens", auth, portfolioController.getAllTokens);
@@ -30,7 +27,6 @@ router.post("/toggle-token", auth, portfolioController.toggleToken);
 router.post("/:chain/sendTransaction", auth, transactionsController.sendTransaction);
 router.post("/:chain/estimateGas", auth, transactionsController.estimateGas);
 router.post("/:chain/prepareTx", transactionsController.prepareTx);
-
 
 
 router.get('/chains', partialsController.getChains);
