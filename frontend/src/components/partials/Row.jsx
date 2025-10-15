@@ -7,7 +7,7 @@ export default function Row({
   priceUsd = null,
   change = null,
   balance,
-  usdValue = null,
+  usdValue,
 }) {
   return (
     <div className="flex items-center justify-between py-4">
