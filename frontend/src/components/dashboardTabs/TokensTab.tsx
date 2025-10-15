@@ -43,10 +43,14 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
                     icon={item?.logo}
                     chain={chain.chain}
                     symbol={item?.symbol || "UNKNOWN"}
-                    priceUsd={livePrice ? livePrice.price : "0.00"}
+                    priceUsd={livePrice ? livePrice.price.toFixed(2) : "0.00"}
                     change={livePrice ? livePrice.change : 0}
-                    balance={item?.balance ? item.balance : "0.0000"}
-                    usdValue={usdValue}
+                    balance={
+                      item?.balance && parseFloat(item.balance) !== 0
+                        ? parseFloat(item.balance).toFixed(5)
+                        : "0"
+                    }
+                    usdValue={usdValue && parseFloat(usdValue) !== 0 ? parseFloat(usdValue).toFixed(2) : "0.00"}
                   />
                 </div>
               );

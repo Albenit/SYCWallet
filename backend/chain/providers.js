@@ -3,6 +3,7 @@ const { ethers } = require('ethers');
 const RPC = {
   ethereum:  process.env.RPC_ETHEREUM,    
   polygon:   process.env.RPC_POLYGON,    
+  sepolia:   process.env.RPC_SEPOLIA,
   bsc:       process.env.RPC_BSC,        
   arbitrum:  process.env.RPC_ARBITRUM,   
   avalanche: process.env.RPC_AVALANCHE,      

@@ -11,7 +11,22 @@ module.exports = {
       { address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", symbol: "USDC", binanceSymbol: "USDCUSDT", decimals: 6, logo: "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png" },
       { address: "0x6B175474E89094C44Da98b954EedeAC495271d0F", symbol: "DAI", binanceSymbol: "DAIUSDT", decimals: 18, logo: "https://assets.coingecko.com/coins/images/9956/large/4943.png" },
       { address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", symbol: "WETH", binanceSymbol: "ETHUSDT", decimals: 18, logo: "https://assets.coingecko.com/coins/images/2518/large/weth.png" },
-      { address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", symbol: "WBTC", binanceSymbol: "BTCUSDT", decimals: 8, logo: "https://assets.coingecko.com/coins/images/7598/large/wbtc.png" },
+      { address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599", symbol: "WBTC", binanceSymbol: "BTCUSDT", decimals: 8, logo: "https://assets.coingecko.com/coins/images/7598/large/wrapped_bitcoin_wbtc.png" },
+    ],
+  },
+
+  sepolia: {
+    label: "Sepolia",
+    nativeSymbol: "ETH",
+    decimals: 18,
+    chainId: 11155111,
+    binanceSymbol: "ETHUSDT",
+    logo: "https://assets.coingecko.com/coins/images/279/large/ethereum.png",
+    tokens: [
+      { address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238", symbol: "USDC", decimals: 6, binanceSymbol: "USDCUSDT", logo: "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png" },
+      { address: "0x68194a729C2450ad26072b3D33adC0b3b2AaA77c", symbol: "DAI", decimals: 18, binanceSymbol: "DAIUSDT", logo: "https://assets.coingecko.com/coins/images/9956/large/4943.png" },
+      { address: "0x779877A7B0D9E8603169DdbD7836e478b4624789", symbol: "LINK", decimals: 18, binanceSymbol: "LINKUSDT", logo: "https://assets.coingecko.com/coins/images/877/large/chainlink-new-logo.png" },
+      { address: "0x07865c6E87B9F70255377e024ace6630C1Eaa37F", symbol: "USDT", decimals: 6, binanceSymbol: "USDTUSDT", logo: "https://assets.coingecko.com/coins/images/325/large/Tether.png" },
     ],
   },
 
@@ -51,7 +66,7 @@ module.exports = {
     decimals: 18,
     chainId: 42161,
     binanceSymbol: "ETHUSDT",
-    logo: "https://assets.coingecko.com/coins/images/16547/large/arbitrum.png",
+    logo: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/arbitrum/info/logo.png",
     tokens: [
       { address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", symbol: "USDT", binanceSymbol: "USDCUSDT", decimals: 6, logo: "https://assets.coingecko.com/coins/images/325/large/Tether.png" },
       { address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8", symbol: "USDC", binanceSymbol: "USDCUSDT", decimals: 6, logo: "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png" },
