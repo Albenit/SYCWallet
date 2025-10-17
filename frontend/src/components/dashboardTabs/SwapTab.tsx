@@ -41,16 +41,24 @@ export default function SwapTab() {
   const { sendTransaction: broadcastTx } = useSendTransaction();
 
   const d: any = data as any;
+  const quoteError: any = error as any;
+  const rateId: string | undefined = d?.rateId;
+  const estimatedAmount =
+    d?.estimatedAmount ?? d?.amountOut ?? d?.result?.estimatedAmount ?? d?.toAmount ?? "";
+  const toAmount =
+    quoteError || estimatedAmount === undefined || estimatedAmount === null
+      ? ""
+      : String(estimatedAmount);
 
-  const firstRoute = d?.routes?.[0];
-
-  const toAmount = String(
-    firstRoute?.expectedBuyAmount ??
-      firstRoute?.expectedBuyAmountMaxSlippage ??
-      d?.estimatedAmount ??
-      d?.result?.estimatedAmount ??
-      ""
-  );
+  const formatMinAmount = (value: any) => {
+    if (value === null || value === undefined) return "";
+    const num = Number(value);
+    if (!Number.isFinite(num)) return String(value);
+    if (num >= 1) {
+      return num.toFixed(4).replace(/\.0+$/, "").replace(/0+$/, "").replace(/\.$/, "");
+    }
+    return num.toPrecision(3);
+  };
 
   useEffect(() => {
     const encryptedJson = localStorage.getItem("encryptedWallet");
@@ -77,9 +85,12 @@ export default function SwapTab() {
         return Swal.fire("Missing token", "Please select both tokens.", "warning");
       if (!fromAmount || Number(fromAmount) <= 0)
         return Swal.fire("Invalid amount", "Enter a valid amount to swap.", "warning");
-      if (!firstRoute)
-        return Swal.fire("No route", "SwapKit did not return a swap route.", "warning");
-
+      if (!fromToken?.changeNowTicker || !toToken?.changeNowTicker)
+        return Swal.fire("Unsupported asset", "ChangeNOW does not support one of the selected tokens on this network.", "warning");
+      if (quoteError)
+        return Swal.fire("Quote unavailable", quoteError?.message || "Please adjust your amount or choose a different pair.", "warning");
+      if (!d)
+        return Swal.fire("No quote", "Please fetch a fresh ChangeNOW quote before swapping.", "warning");
 
       setSwapping(true);
 
@@ -91,40 +102,45 @@ export default function SwapTab() {
       const password = bytes.toString(CryptoJS.enc.Utf8);
       const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
 
-      // 🪄 Ask backend to prepare SwapKit swap
-      const res = await fetch(`${env.VITE_API_URL}/swapkit/swap`, {
+      // 🪄 Ask backend to prepare ChangeNOW deposit transaction
+      const payload: any = {
+        sellAsset: fromToken,
+        buyAsset: toToken,
+        sellAmount: String(fromAmount),
+        sourceAddress: wallet.address,
+        destinationAddress: wallet.address,
+        fromChain: fromChain.key,
+        toChain: toChain.key,
+      };
+
+      if (rateId) {
+        payload.rateId = String(rateId);
+      }
+
+      const res = await fetch(`${env.VITE_API_URL}/changenow/swap`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sellAsset: fromToken,
-          buyAsset: toToken,
-          sellAmount: String(fromAmount),
-          sourceAddress: wallet.address,
-          destinationAddress: wallet.address,
-          slippage: 1,
-          fromChain: fromChain.key,
-          toChain: toChain.key,
-          routeIndex: 0,
-          routeTag: firstRoute?.meta?.tags?.[0],
-          quoteId: d?.quoteId,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "SwapKit request failed");
+      if (!res.ok) throw new Error(data?.error || "ChangeNOW request failed");
 
       const tx = data?.tx || data?.route?.tx || data?.result?.tx;
-      if (!tx?.to || !tx?.data) throw new Error("SwapKit did not return a valid transaction");
+      if (!tx?.to || (!tx?.data && !tx?.value))
+        throw new Error("ChangeNOW did not return a sendable transaction");
 
-      const baseTx: any = { to: tx.to, data: tx.data };
+      const baseTx: any = { to: tx.to };
+      if (tx.data) baseTx.data = tx.data;
       if (tx.value) baseTx.value = tx.value;
       const prepared = await prepareTx(fromChain.key, baseTx, wallet.address);
       const signed = await wallet.signTransaction(serializeTx(prepared));
       const sent = await broadcastTx(fromChain.key, signed);
 
+  const changeNowId = data?.id || data?.transaction?.id || data?.result?.id;
       Swal.fire({
         title: "Swap submitted",
-        text: `Tx hash: ${sent.hash}`,
+        html: `ChangeNOW ID: <b>${changeNowId || "pending"}</b><br/>Tx hash: ${sent.hash}`,
         icon: "success",
         background: "#02010C",
         color: "#fff",
@@ -243,16 +259,34 @@ export default function SwapTab() {
           <input
             type="text"
             placeholder="0"
-            value={loading ? "Loading..." : error ? "Error" : toAmount}
+            value={
+              loading
+                ? "Loading..."
+                : quoteError?.code === "deposit_too_small" && quoteError?.minAmount
+                ? `Min ${formatMinAmount(quoteError.minAmount)}`
+                : quoteError
+                ? "Unavailable"
+                : toAmount
+            }
             readOnly
             className="w-24 text-right bg-transparent text-gray-400 text-sm focus:outline-none"
           />
         </div>
       </div>
 
+        {quoteError && (
+          <p className="text-xs text-red-400 text-right pr-1">
+            {quoteError.code === "deposit_too_small" && quoteError.minAmount
+              ? `Amount too low. Minimum is ${formatMinAmount(quoteError.minAmount)} ${
+                  fromToken?.symbol?.toUpperCase() || ""
+                }`
+              : quoteError.message || "Quote unavailable for this pair."}
+          </p>
+        )}
+
       {/* Swap button */}
       <button
-        disabled={swapping}
+          disabled={swapping || loading || !d || Boolean(quoteError)}
         onClick={handleSwap}
         className="w-full rounded-full py-3 transition bg-blue-600 hover:bg-blue-700 cursor-pointer font-[700]"
       >
