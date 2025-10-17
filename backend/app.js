@@ -27,12 +27,12 @@ app.use(express.json());
 const authRoutes = require("./routes/authRoutes");
 const walletRoutes = require("./routes/walletRoutes");
 const swapRoutes = require("./routes/swapRoutes");
-const swapkitRoutes = require("./routes/swapkitRoutes");
+const changeNowRoutes = require("./routes/changenowRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/swap', swapRoutes);
-app.use('/api/swapkit', swapkitRoutes);
+app.use('/api/changenow', changeNowRoutes);
 
 app.get("/", (_req, res) => res.send("API is running..."));
 

@@ -33,23 +33,34 @@ export default function SwapTokenModal({ isOpen, onClose, onSelect, chainKey }: 
           {tokens.map((token: any, idx: number) => (
             <button
               key={token.address || token.symbol + idx}
-              onClick={() => {  
+              disabled={token.changeNowSupported === false || !token.changeNowTicker}
+              onClick={() => {
+                if (token.changeNowSupported === false || !token.changeNowTicker) return;
                 onSelect({
                   symbol: token.symbol,
                   decimals: token.decimals,
-                  address: token.address,     
+                  address: token.address,
                   logo: token.logo,
-                  binanceSymbol: token.binanceSymbol
+                  binanceSymbol: token.binanceSymbol,
+                  changeNowTicker: token.changeNowTicker,
+                  native: token.native || false,
                 });
                 onClose();
               }}
-              className="w-full flex items-center gap-3 p-3 rounded-md hover:bg-white/2 text-left cursor-pointer"
+              className={`w-full flex items-center gap-3 p-3 rounded-md text-left ${
+                token.changeNowSupported === false || !token.changeNowTicker
+                  ? "cursor-not-allowed opacity-50"
+                  : "hover:bg-white/2 cursor-pointer"
+              }`}
             >
               <img src={token.logo} alt={token.symbol} className="h-6 w-6 rounded-full" />
               <span className="text-white">{token.symbol}</span>
               {token.native && (
                 <span className="ml-auto text-xs text-gray-400">Native</span>
               )}
+              {token.changeNowSupported === false || !token.changeNowTicker ? (
+                <span className="ml-auto text-xs text-red-400">Unavailable</span>
+              ) : null}
             </button>
           ))}
         </div>

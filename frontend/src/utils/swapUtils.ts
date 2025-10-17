@@ -18,7 +18,7 @@ export function ensureSupportedSwap(fromChainKey: string, toChainKey: string): b
   if (!supported) {
     Swal.fire({
       title: "Cross-chain route not supported",
-      text: `Swapping from ${fromChainKey} → ${toChainKey} is not supported by SwapKit.`,
+      text: `Swapping from ${fromChainKey} → ${toChainKey} is not supported by ChangeNOW.`,
       icon: "info",
       background: "#02010C",
       color: "#fff",

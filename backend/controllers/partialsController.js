@@ -1,4 +1,5 @@
 const CHAINS = require("../chain/config");
+const resolveChangeNowTicker = require("../utils/resolveChangeNowTicker");
 
 exports.getChains = async (req, res) => {
   try {
@@ -9,6 +10,8 @@ exports.getChains = async (req, res) => {
       decimals: chain.decimals,
       chainId: chain.chainId,
       logo: chain.logo,
+      changeNowNetwork: chain.changeNowNetwork || null,
+      changeNowTicker: chain.changeNowTicker || null,
     }));
 
     return res.json({
@@ -37,17 +40,38 @@ exports.getChainTokens = async (req, res) => {
       });
     }
 
-    const tokens = [{
+    const mapTicker = (symbol, rawTicker) => {
+      if (!chainConfig.changeNowNetwork) return null;
+      if (rawTicker === null) return null;
+      if (typeof rawTicker === "string" && rawTicker.trim().length > 0 && rawTicker !== "null") {
+        return rawTicker.toLowerCase();
+      }
+      return resolveChangeNowTicker(symbol, chainConfig.changeNowNetwork);
+    };
+
+    const tokens = [
+      {
         symbol: chainConfig.nativeSymbol,
         decimals: chainConfig.decimals,
         address: null,
         logo: chainConfig.logo,
         native: true,
+        changeNowTicker: mapTicker(chainConfig.nativeSymbol, chainConfig.changeNowTicker),
       },
-      ...chainConfig.tokens,
+      ...chainConfig.tokens.map((token) => {
+        const ticker = mapTicker(token.symbol, token.changeNowTicker);
+        return {
+          ...token,
+          changeNowTicker: ticker,
+        };
+      }),
     ];
 
-    res.json(tokens);
+    res.json(tokens.map((token) => ({
+      ...token,
+      changeNowTicker: token.changeNowTicker ?? null,
+      changeNowSupported: Boolean(token.changeNowTicker),
+    })));
   } catch (err) {
     res.status(500).json({
       error: err.message
