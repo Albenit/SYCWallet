@@ -169,18 +169,7 @@ exports.quote = async (req, res) => {
 
 exports.swap = async (req, res) => {
   try {
-    const {
-      sellAsset,
-      buyAsset,
-      sellAmount,
-      sourceAddress,
-      destinationAddress,
-    fromChain,
-    toChain,
-    rateId,
-      flow = "standard",
-      type = "direct",
-    } = req.body;
+    const {sellAsset,buyAsset,sellAmount,sourceAddress,destinationAddress,fromChain,toChain,rateId,flow = "standard",type = "direct",} = req.body;
 
     if (!sellAsset || !buyAsset || !sellAmount || !destinationAddress || !fromChain || !toChain) {
       throw createError(400, "Missing required parameters for swap creation");
@@ -201,26 +190,20 @@ exports.swap = async (req, res) => {
     };
 
     const payload = {
-      fromCurrency: sell.changeNowTicker,
-      toCurrency: buy.changeNowTicker,
+      fromCurrency: sell.changeNowTicker.toLowerCase(),
+      toCurrency: buy.changeNowTicker.toLowerCase(),
+      fromNetwork: fromChainCfg.changeNowNetwork.toLowerCase(),
+      toNetwork: toChainCfg.changeNowNetwork.toLowerCase(),
       fromAmount: String(sellAmount),
-      fromNetwork: fromChainCfg.changeNowNetwork,
-      toNetwork: toChainCfg.changeNowNetwork,
+      address: String(destinationAddress),
+      refundAddress: sourceAddress ? String(sourceAddress) : undefined,
       flow,
       type,
-      destinationAddress: String(destinationAddress),
-      refundAddress: sourceAddress ? String(sourceAddress) : undefined,
     };
 
-    if (rateId) {
-      payload.rateId = String(rateId);
-    } else if (flow === "fixed-rate") {
-      throw createError(400, "ChangeNOW fixed-rate swaps require a rateId. Fetch a fresh fixed-rate quote.");
-    }
+    if (rateId) payload.rateId = String(rateId);
 
-    const { data } = await axios.post(`${BASE_URL}/exchange/transactions`, payload, {
-      headers,
-    });
+    const { data } = await axios.post(`${BASE_URL}/exchange`, payload, { headers });
 
     let tx = null;
     try {
@@ -243,3 +226,5 @@ exports.swap = async (req, res) => {
     handleError(res, err, "ChangeNOW Swap Error");
   }
 };
+
+

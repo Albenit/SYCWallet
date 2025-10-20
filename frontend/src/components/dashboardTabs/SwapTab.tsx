@@ -9,6 +9,8 @@ import useSwapEstimate from "../../hooks/useSwapEstimate";
 import usePrepareTx from "../../hooks/usePrepareTx";
 import useSendTransaction from "../../hooks/useSendTransaction";
 import { sendTransactionError } from "../../utils/errorUtils";
+import useCheckBalance from "../../hooks/useCheckBalance";
+import useChangeNowSwap from "../../hooks/useChangeNowSwap";
 
 const env: any = (import.meta as any).env;
 
@@ -23,6 +25,8 @@ export default function SwapTab() {
   const [fromAmount, setFromAmount] = useState("");
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [swapping, setSwapping] = useState(false);
+  const { checkBalance } = useCheckBalance();
+  const { createSwap } = useChangeNowSwap();
 
   const [isChainModalOpen, setIsChainModalOpen] = useState(false);
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
@@ -77,88 +81,118 @@ export default function SwapTab() {
     }
   }, []);
 
-  const handleSwap = async () => {
-    try {
-      if (!fromChain || !toChain)
-        return Swal.fire("Missing network", "Please select both networks.", "warning");
-      if (!fromToken || !toToken)
-        return Swal.fire("Missing token", "Please select both tokens.", "warning");
-      if (!fromAmount || Number(fromAmount) <= 0)
-        return Swal.fire("Invalid amount", "Enter a valid amount to swap.", "warning");
-      if (!fromToken?.changeNowTicker || !toToken?.changeNowTicker)
-        return Swal.fire("Unsupported asset", "ChangeNOW does not support one of the selected tokens on this network.", "warning");
-      if (quoteError)
-        return Swal.fire("Quote unavailable", quoteError?.message || "Please adjust your amount or choose a different pair.", "warning");
-      if (!d)
-        return Swal.fire("No quote", "Please fetch a fresh ChangeNOW quote before swapping.", "warning");
+const handleSwap = async () => {
+  try {
+    if (!fromChain || !toChain)
+      return Swal.fire("Missing network", "Please select both networks.", "warning");
+    if (!fromToken || !toToken)
+      return Swal.fire("Missing token", "Please select both tokens.", "warning");
+    if (!fromAmount || Number(fromAmount) <= 0)
+      return Swal.fire("Invalid amount", "Enter a valid amount to swap.", "warning");
+    if (!fromToken?.changeNowTicker || !toToken?.changeNowTicker)
+      return Swal.fire(
+        "Unsupported asset",
+        "ChangeNOW does not support one of the selected tokens on this network.",
+        "warning"
+      );
+    if (quoteError)
+      return Swal.fire(
+        "Quote unavailable",
+        quoteError?.message || "Please adjust your amount or choose a different pair.",
+        "warning"
+      );
+    if (!d)
+      return Swal.fire(
+        "No quote",
+        "Please fetch a fresh ChangeNOW quote before swapping.",
+        "warning"
+      );
 
-      setSwapping(true);
+    setSwapping(true);
 
-      const encryptedJson = localStorage.getItem("encryptedWallet");
-      const password_enc = sessionStorage.getItem("c_aP");
-      if (!encryptedJson || !password_enc) throw new Error("Wallet not found");
-      const secret = env?.VITE_ENCRYPT_KEY;
-      const bytes = CryptoJS.AES.decrypt(password_enc, secret);
-      const password = bytes.toString(CryptoJS.enc.Utf8);
-      const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
+    const encryptedJson = localStorage.getItem("encryptedWallet");
+    const password_enc = sessionStorage.getItem("c_aP");
+    if (!encryptedJson || !password_enc) throw new Error("Wallet not found");
 
-      // 🪄 Ask backend to prepare ChangeNOW deposit transaction
-      const payload: any = {
-        sellAsset: fromToken,
-        buyAsset: toToken,
-        sellAmount: String(fromAmount),
-        sourceAddress: wallet.address,
-        destinationAddress: wallet.address,
-        fromChain: fromChain.key,
-        toChain: toChain.key,
-      };
+    const secret = env?.VITE_ENCRYPT_KEY;
+    const bytes = CryptoJS.AES.decrypt(password_enc, secret);
+    const password = bytes.toString(CryptoJS.enc.Utf8);
+    const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
 
-      if (rateId) {
-        payload.rateId = String(rateId);
-      }
+    const balanceData = await checkBalance(wallet.address, fromChain.key);
+    const balanceInEth = parseFloat(balanceData.balance);
+    const nativeSymbol = balanceData.symbol || "ETH";
 
-      const res = await fetch(`${env.VITE_API_URL}/changenow/swap`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "ChangeNOW request failed");
-
-      const tx = data?.tx || data?.route?.tx || data?.result?.tx;
-      if (!tx?.to || (!tx?.data && !tx?.value))
-        throw new Error("ChangeNOW did not return a sendable transaction");
-
-      const baseTx: any = { to: tx.to };
-      if (tx.data) baseTx.data = tx.data;
-      if (tx.value) baseTx.value = tx.value;
-      const prepared = await prepareTx(fromChain.key, baseTx, wallet.address);
-      const signed = await wallet.signTransaction(serializeTx(prepared));
-      const sent = await broadcastTx(fromChain.key, signed);
-
-  const changeNowId = data?.id || data?.transaction?.id || data?.result?.id;
+    if (balanceInEth < 0.0005) {
       Swal.fire({
-        title: "Swap submitted",
-        html: `ChangeNOW ID: <b>${changeNowId || "pending"}</b><br/>Tx hash: ${sent.hash}`,
-        icon: "success",
+        title: "Insufficient Gas Balance",
+        text: `You need at least ~0.0005 ${nativeSymbol} to cover gas fees.`,
+        icon: "warning",
         background: "#02010C",
         color: "#fff",
       });
-      setFromAmount("");
-    } catch (err: any) {
-      console.error(err);
-      Swal.fire({
-        title: "Swap failed",
-        text: sendTransactionError(err),
-        icon: "error",
-        background: "#02010C",
-        color: "#fff",
-      });
-    } finally {
       setSwapping(false);
+      return;
     }
-  };
+
+    const payload = {
+      sellAsset: fromToken,
+      buyAsset: toToken,
+      sellAmount: String(fromAmount),
+      sourceAddress: wallet.address,
+      destinationAddress: wallet.address,
+      fromChain: fromChain.key,
+      toChain: toChain.key,
+    };
+
+    if (rateId) {
+      payload.rateId = String(rateId);
+    }
+
+    const data = await createSwap(payload);
+
+    const tx = data?.tx || data?.route?.tx || data?.result?.tx;
+    if (!tx?.to || (!tx?.data && !tx?.value))
+      throw new Error("ChangeNOW did not return a sendable transaction");
+
+    const baseTx = { to: tx.to };
+    if (tx.data) baseTx.data = tx.data;
+    if (tx.value) baseTx.value = tx.value;
+
+    const prepared = await prepareTx(fromChain.key, baseTx, wallet.address);
+
+    // 🔧 Flatten BigNumber value for signing
+    if (prepared.value && typeof prepared.value === "object" && "hex" in prepared.value) {
+      prepared.value = prepared.value.hex;
+    }
+
+    const signed = await wallet.signTransaction(serializeTx(prepared));
+    const sent = await broadcastTx(fromChain.key, signed);
+
+    const changeNowId = data?.id || data?.transaction?.id || data?.result?.id;
+    Swal.fire({
+      title: "Swap submitted",
+      html: `ChangeNOW ID: <b>${changeNowId || "pending"}</b><br/>Tx hash: ${sent.hash}`,
+      icon: "success",
+      background: "#02010C",
+      color: "#fff",
+    });
+
+    setFromAmount("");
+  } catch (err) {
+    console.error(err);
+    Swal.fire({
+      title: "Swap failed",
+      text: sendTransactionError(err),
+      icon: "error",
+      background: "#02010C",
+      color: "#fff",
+    });
+  } finally {
+    setSwapping(false);
+  }
+};
+
 
   const swapSides = () => {
     const tempC = fromChain;

@@ -84,50 +84,43 @@ exports.estimateGas = async (req, res) => {
 
 exports.prepareTx = async (req, res) => {
   try {
-    const {
-      chain
-    } = req.params;
-    const {
-      from,
-      to,
-      value,
-      data
-    } = req.body;
+    const { chain } = req.params;
+    const { from, to, value, data } = req.body;
 
     const chainCfg = CHAINS[chain];
     if (!chainCfg) {
-      return res.status(400).json({
-        error: "Unsupported chain"
-      });
+      return res.status(400).json({ error: "Unsupported chain" });
     }
 
     const provider = getProvider(chain);
 
-    // get nonce for sender
+    // ✅ Get sender nonce
     const nonce = await provider.getTransactionCount(from, "latest");
 
-    // build tx skeleton
-    let txRequest = {
-      from,
-      to
-    };
+    // ✅ Build transaction skeleton
+    let txRequest = { from, to };
+    if (value) txRequest.value = ethers.BigNumber.from(value);
+    if (data) txRequest.data = data;
 
-    if (value) {
-      txRequest.value = ethers.BigNumber.from(value); // if provided already as hex/wei
-    }
-    if (data) {
-      txRequest.data = data;
-    }
-
-    // estimate gas
+    // ✅ Estimate gas with intelligent fallback
     let gasLimit;
     try {
-      gasLimit = await provider.estimateGas(txRequest);
+      const estimated = await provider.estimateGas(txRequest);
+      // add 20% buffer to handle network variations
+      gasLimit = estimated.mul(120).div(100);
     } catch (err) {
-      // fallback if estimation fails
-      gasLimit = ethers.BigNumber.from("21000");
+      console.warn(`⚠️ Gas estimation failed: ${err.message}`);
+
+      // heuristic: token transfer vs. native send
+      if (data && data.startsWith("0xa9059cbb")) {
+        // 0xa9059cbb = ERC20 transfer()
+        gasLimit = ethers.BigNumber.from("100000");
+      } else {
+        gasLimit = ethers.BigNumber.from("21000");
+      }
     }
 
+    // ✅ Fetch current gas fee data
     const feeData = await provider.getFeeData();
 
     const prepared = {
@@ -136,17 +129,15 @@ exports.prepareTx = async (req, res) => {
       gasLimit: gasLimit.toHexString(),
       gasPrice: feeData.gasPrice ? feeData.gasPrice.toHexString() : undefined,
       maxFeePerGas: feeData.maxFeePerGas ? feeData.maxFeePerGas.toHexString() : undefined,
-      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas ?
-        feeData.maxPriorityFeePerGas.toHexString() :
-        undefined,
-      chainId: chainCfg.chainId, // ✅ ensure correct chain id
+      maxPriorityFeePerGas: feeData.maxPriorityFeePerGas
+        ? feeData.maxPriorityFeePerGas.toHexString()
+        : undefined,
+      chainId: chainCfg.chainId,
     };
 
     res.json(prepared);
   } catch (err) {
-    console.error("prepareTx error:", err);
-    res.status(400).json({
-      error: err.message || "failed"
-    });
+    console.error("❌ prepareTx error:", err);
+    res.status(400).json({ error: err.message || "failed" });
   }
 };
