@@ -58,7 +58,6 @@ export default function useSwapEstimate(fromAsset, toAsset, amount, fromChain, t
       } catch (err) {
         if (cancelled) return;
         const apiError = err.response?.data;
-        console.error("❌ ChangeNOW quote failed:", apiError || err.message);
         const code = apiError?.error || err.message;
         const message = apiError?.message || err.message;
         const minAmount = apiError?.payload?.range?.minAmount ?? null;

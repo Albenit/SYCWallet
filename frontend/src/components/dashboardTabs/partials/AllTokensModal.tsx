@@ -89,7 +89,10 @@ export default function AllTokensModal({isOpen,onClose,refetchPortfolio,}:any) {
                           key={`${chain.chain}-${idx}`}
                           className="flex items-center justify-between bg-white/2 rounded-3xl px-3 py-2"
                         >
-                          <span>{token.symbol}</span>
+                          <div className="flex items-center">
+                            <img src={token.logo} alt={token.symbol} className="w-6 h-6 rounded-full mr-2"/>
+                            <span>{token.symbol}</span>
+                          </div>
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"

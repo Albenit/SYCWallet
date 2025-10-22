@@ -128,6 +128,7 @@ exports.getAllTokens = async (req, res) => {
         symbol: chainCfg.nativeSymbol,
         decimals: chainCfg.decimals,
         binanceSymbol: chainCfg.binanceSymbol,
+        logo: chainCfg.logo,
         address: null,
         active: activeMap.has(`${chainKey}:native`), 
       });
@@ -142,6 +143,7 @@ exports.getAllTokens = async (req, res) => {
             decimals: t.decimals,
             binanceSymbol: t.binanceSymbol,
             address: t.address.toLowerCase(),
+            logo: t.logo,
             active: activeMap.has(`${chainKey}:${t.address.toLowerCase()}`),
           });
         }
