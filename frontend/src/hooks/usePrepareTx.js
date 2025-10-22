@@ -18,7 +18,9 @@ export default function usePrepareTx() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ from: walletAddress, ...txData }),
+          body: JSON.stringify({ from: walletAddress, ...txData }, (_, v) =>
+            typeof v === "bigint" ? v.toString() : v
+          ),
         }
       );
 

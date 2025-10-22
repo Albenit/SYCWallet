@@ -90,23 +90,11 @@ const handleSwap = async () => {
     if (!fromAmount || Number(fromAmount) <= 0)
       return Swal.fire("Invalid amount", "Enter a valid amount to swap.", "warning");
     if (!fromToken?.changeNowTicker || !toToken?.changeNowTicker)
-      return Swal.fire(
-        "Unsupported asset",
-        "ChangeNOW does not support one of the selected tokens on this network.",
-        "warning"
-      );
+      return Swal.fire("Unsupported asset", "ChangeNOW does not support one of the selected tokens on this network.","warning");
     if (quoteError)
-      return Swal.fire(
-        "Quote unavailable",
-        quoteError?.message || "Please adjust your amount or choose a different pair.",
-        "warning"
-      );
+      return Swal.fire("Quote unavailable",quoteError?.message || "Please adjust your amount or choose a different pair.","warning");
     if (!d)
-      return Swal.fire(
-        "No quote",
-        "Please fetch a fresh ChangeNOW quote before swapping.",
-        "warning"
-      );
+      return Swal.fire("No quote","Please fetch a fresh ChangeNOW quote before swapping.","warning");
 
     setSwapping(true);
 
@@ -180,7 +168,7 @@ const handleSwap = async () => {
 
     setFromAmount("");
   } catch (err) {
-    console.error(err);
+    // console.error(err);
     Swal.fire({
       title: "Swap failed",
       text: sendTransactionError(err),
@@ -308,15 +296,15 @@ const handleSwap = async () => {
         </div>
       </div>
 
-        {quoteError && (
-          <p className="text-xs text-red-400 text-right pr-1">
-            {quoteError.code === "deposit_too_small" && quoteError.minAmount
-              ? `Amount too low. Minimum is ${formatMinAmount(quoteError.minAmount)} ${
-                  fromToken?.symbol?.toUpperCase() || ""
-                }`
-              : quoteError.message || "Quote unavailable for this pair."}
-          </p>
-        )}
+      {quoteError && (
+        <p className="text-xs text-red-400 text-right pr-1">
+          {quoteError.code === "deposit_too_small" && quoteError.minAmount
+            ? `Amount too low. Minimum is ${formatMinAmount(quoteError.minAmount)} ${
+                fromToken?.symbol?.toUpperCase() || ""
+              }`
+            : quoteError.message || "Quote unavailable for this pair."}
+        </p>
+      )}
 
       {/* Swap button */}
       <button

@@ -17,12 +17,7 @@ interface SendTabProps {
   refetchPortfolio: () => void;
 }
 
-export default function SendTab({
-  portfolio,
-  portfolioLoading,
-  portfolioError,
-  refetchPortfolio,
-}: SendTabProps) {
+export default function SendTab({portfolio,portfolioLoading,portfolioError,refetchPortfolio,}: SendTabProps) {
   const [selectedToken, setSelectedToken] = useState<any>(null);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
@@ -62,19 +57,49 @@ export default function SendTab({
       const secret = import.meta.env.VITE_ENCRYPT_KEY;
 
       const password_enc = sessionStorage.getItem("c_aP");
-
       if (!password_enc) throw new Error("No encrypted password found");
 
       const bytes = CryptoJS.AES.decrypt(password_enc, secret);
       const password = bytes.toString(CryptoJS.enc.Utf8);
-
       if (!password) throw new Error("Decryption failed");
 
-      const wallet = await ethers.Wallet.fromEncryptedJson(
-        encryptedJson,
-        password
-      );
+      const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
 
+      // Parse balance and fee
+      const balance = parseFloat(selectedToken.balance || "0");
+      const enteredAmount = parseFloat(amount || "0");
+      const estimatedFee = parseFloat(feeEstimate || "0"); // this comes from useEstimateGas
+
+      // --- ✅ Pre-send balance & fee check ---
+      if (selectedToken.type !== "token") {
+        // Native ETH send (needs gas)
+        const totalNeeded = enteredAmount + estimatedFee;
+        if (totalNeeded > balance) {
+          Swal.fire({
+            title: "Insufficient Balance",
+            text: `You need at least ${totalNeeded.toFixed(6)} ${selectedToken.symbol} (amount + gas fee) to complete this transaction.`,
+            icon: "warning",
+            background: "#02010C",
+            color: "#ffffff",
+          });
+          return;
+        }
+      } else {
+        // Token send: need some ETH (or chain native) to cover gas
+        if (estimatedFee > 0 && balance < estimatedFee) {
+          Swal.fire({
+            title: "Insufficient Gas Funds",
+            text: `You need at least ${estimatedFee.toFixed(6)} ${selectedToken.chainNativeSymbol} to pay the transaction fee.`,
+            icon: "warning",
+            background: "#02010C",
+            color: "#ffffff",
+          });
+          return;
+        }
+      }
+      // --- ✅ End pre-check ---
+
+      // Build txData (native or token)
       const txData =
         selectedToken.type === "token"
           ? {
@@ -89,16 +114,25 @@ export default function SendTab({
               value: ethers.parseEther(amount),
             };
 
-      const prepared = await prepareTx(
-        selectedToken.chainKey,
-        txData,
-        wallet.address
-      );
+      // Prepare transaction via backend
+      const prepared = await prepareTx(selectedToken.chainKey, txData, wallet.address);
 
-      const fullTx = { ...txData, ...prepared };
+      // --- 🔧 Normalize backend BigNumber fields ---
+      const normalizeTx = (tx: any) => {
+        const normalized: any = { ...tx };
+        for (const key in normalized) {
+          const val = normalized[key];
+          if (val && typeof val === "object" && "hex" in val) {
+            normalized[key] = val.hex; // convert ethers BigNumber-like objects
+          }
+        }
+        return normalized;
+      };
+
+      const fullTx = normalizeTx({ ...txData, ...prepared });
+      // --- ✅ END FIX ---
 
       const signedTx = await wallet.signTransaction(fullTx);
-
       const data = await broadcastTx(selectedToken.chainKey, signedTx);
 
       Swal.fire({
@@ -114,6 +148,8 @@ export default function SendTab({
       setSelectedToken(null);
       refetchPortfolio();
     } catch (err: any) {
+      console.error("Transaction error:", err);
+
       Swal.fire({
         title: "Transaction Failed",
         text: sendTransactionError(err),

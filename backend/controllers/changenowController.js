@@ -21,14 +21,28 @@ function handleError(res, err, label) {
   const errorCode = data?.error || err.code || "internal_error";
   const message = data?.message || err.message || "Unknown error";
 
+  let minAmount = null;
+  let maxAmount = null;
+
+  if (typeof message === "string") {
+    const minMatch = message.match(/([\d.]+)\s*[A-Z]+/);
+    if (minMatch) minAmount = minMatch[1];
+  }
+
+  if (data?.payload?.minAmount) minAmount = data.payload.minAmount;
+  if (data?.payload?.maxAmount) maxAmount = data.payload.maxAmount;
+
   console.error(`❌ ${label}:`, data || err.message);
 
   res.status(status).json({
-    error: errorCode,
+    code: errorCode,
     message,
-    payload: data?.payload || null,
+    minAmount,
+    maxAmount,
+    raw: data || null,
   });
 }
+
 
 function requireApiKey() {
 
