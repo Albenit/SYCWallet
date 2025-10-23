@@ -10,7 +10,7 @@ export default function Row({
   usdValue,
 }) {
   return (
-    <div className="flex items-center justify-between py-4">
+    <div className="px-2 flex items-center justify-between py-4">
       <div className="flex items-center gap-3">
         <img src={icon} alt="" className="flex-none" width={35} height={35} />
         <div>

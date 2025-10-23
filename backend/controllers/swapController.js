@@ -4,6 +4,7 @@ const { getPrices } = require("../utils/prices");
 const { getProvider } = require('../chain/providers');
 const CHAINS = require("../chain/config");
 const { ethers } = require("ethers");
+const erc20Abi = require("../abis/erc20.json");
 
 exports.estimate = async (req, res) => {
     try {
@@ -74,27 +75,51 @@ exports.estimate = async (req, res) => {
 
 exports.checkBalance = async (req, res) => {
     try {
-    const { address, chain } = req.body;
+        const { address, chain, token } = req.body;
 
-    if (!address || !chain) {
-      return res.status(400).json({ error: "Missing address or chain" });
+        if (!address || !chain) {
+            return res.status(400).json({ error: "Missing address or chain" });
+        }
+
+        const chainCfg = CHAINS[chain];
+        if (!chainCfg) {
+            return res.status(400).json({ error: "Unsupported chain" });
+        }
+
+        const provider = getProvider(chain);
+
+        if (token && token.address) {
+            const contract = new ethers.Contract(token.address, erc20Abi, provider);
+            const balanceWei = await contract.balanceOf(address);
+
+            let decimals = token.decimals;
+            if (decimals === undefined || decimals === null) {
+                const onchainDecimals = await contract.decimals();
+                decimals = typeof onchainDecimals === "number" ? onchainDecimals : Number(onchainDecimals);
+            }
+            const decimalsNum = typeof decimals === "number" ? decimals : Number(decimals) || 18;
+            const formatted = ethers.utils.formatUnits(balanceWei, decimalsNum);
+
+            return res.json({
+                balance: formatted,
+                symbol: token.symbol || token.address,
+                rawBalance: balanceWei.toString(),
+                decimals: decimalsNum,
+            });
+        }
+
+        const balanceWei = await provider.getBalance(address);
+        const decimals = chainCfg.decimals || 18;
+        const formatted = ethers.utils.formatUnits(balanceWei, decimals);
+
+        return res.json({
+            balance: formatted,
+            symbol: chainCfg.nativeSymbol || "ETH",
+            rawBalance: balanceWei.toString(),
+            decimals,
+        });
+    } catch (err) {
+        console.error("check-balance error:", err);
+        return res.status(500).json({ error: "Failed to check wallet balance" });
     }
-
-    const chainCfg = CHAINS[chain];
-    if (!chainCfg) {
-      return res.status(400).json({ error: "Unsupported chain" });
-    }
-
-    const provider = getProvider(chain);
-    const balanceWei = await provider.getBalance(address);
-    const balanceEth = parseFloat(ethers.utils.formatEther(balanceWei));
-
-    res.json({
-      balance: balanceEth,
-      symbol: chainCfg.nativeSymbol || "ETH",
-    });
-  } catch (err) {
-    console.error("check-balance error:", err);
-    res.status(500).json({ error: "Failed to check wallet balance" });
-  }
-}
+};
