@@ -22,39 +22,100 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [errorTransaction, setErrorTransaction] = useState("");
+  const [gasQuote, setGasQuote] = useState<any>(null);
+  const [gasWarning, setGasWarning] = useState<any>(null);
+  const [gasErrorMessage, setGasErrorMessage] = useState("");
 
   const { prepareTx } = usePrepareTx();
   const { sendTransaction: broadcastTx } = useSendTransaction();
-  const { estimateGas, feeEstimate } = useEstimateGas();
+  const { estimateGas, loading: gasLoading } = useEstimateGas();
+
+  const formatAmount = (value?: string | number | null) => {
+    if (value === undefined || value === null) return "0";
+    const num = Number(value);
+    if (!Number.isFinite(num)) return String(value);
+    if (num === 0) return "0";
+    if (num >= 1) return num.toFixed(4).replace(/\.0+$/, "").replace(/0+$/, "").replace(/\.$/, "");
+    return num
+      .toPrecision(4)
+      .replace(/\.0+$/, "")
+      .replace(/0+e/, "e")
+      .replace(/\.e/, "e")
+      .replace(/0+$/, "")
+      .replace(/\.$/, "");
+  };
+
+  const getNumericBalance = (token: any) => {
+    const parsed = parseFloat(token?.rawBalance ?? token?.balance ?? "0");
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
 
   useEffect(() => {
-    if (!selectedToken || !to || !amount) return;
+    const recipient = to.trim();
+    const amountValue = amount.trim();
 
-    if (parseFloat(amount) > parseFloat(selectedToken.balance || "0")) {
-      setErrorTransaction("Not enough balance");
+    if (!selectedToken || !recipient || !amountValue) {
+      setGasQuote(null);
+      setGasWarning(null);
+      setGasErrorMessage("");
       return;
     }
 
-    const handler = setTimeout(() => {
-      estimateGas({
-        chainKey: selectedToken.chainKey,
-        to,
-        from: selectedToken.userAddress,
-        amount,
-        token: selectedToken.type === "token" ? selectedToken.token : null,
-        decimals: selectedToken.decimals,
-      });
+    if (parseFloat(amountValue) > getNumericBalance(selectedToken)) {
+      setGasQuote(null);
+      setGasWarning(null);
+      setGasErrorMessage("");
+      return;
+    }
+
+    let cancelled = false;
+    setGasErrorMessage("");
+    const handler = setTimeout(async () => {
+      try {
+        const quote = await estimateGas({
+          chainKey: selectedToken.chainKey,
+          to: recipient,
+          from: selectedToken.userAddress,
+          amount: amountValue,
+          token: selectedToken.type === "token" ? selectedToken.token : null,
+          decimals: selectedToken.decimals,
+        });
+        if (cancelled) return;
+        setGasQuote(quote);
+        setGasWarning(quote?.warning || null);
+      } catch (err: any) {
+        if (cancelled) return;
+        setGasQuote(null);
+        setGasWarning(null);
+        const shortfall = err?.shortfall || err?.details?.shortfall || err?.shortfallEstimated;
+        const required = err?.required || err?.details?.required;
+        const available = err?.available || err?.details?.available;
+        if (shortfall && selectedToken?.chainNativeSymbol) {
+          setGasErrorMessage(
+            `You need about ${formatAmount(shortfall)} ${selectedToken.chainNativeSymbol} more for gas. Available ${formatAmount(available || "0")}.`
+          );
+        } else if (required && available && selectedToken?.chainNativeSymbol) {
+          setGasErrorMessage(
+            `Gas requires ~${formatAmount(required)} ${selectedToken.chainNativeSymbol}. Available ${formatAmount(available)}.`
+          );
+        } else {
+          setGasErrorMessage(err?.message || "Failed to estimate gas");
+        }
+      }
     }, 500);
 
-    return () => clearTimeout(handler);
-  }, [selectedToken, to, amount]);
+    return () => {
+      cancelled = true;
+      clearTimeout(handler);
+    };
+  }, [selectedToken, to, amount, estimateGas]);
 
   const sendTransaction = async () => {
     try {
       const encryptedJson = localStorage.getItem("encryptedWallet");
       if (!encryptedJson) throw new Error("No wallet found");
 
-      const secret = import.meta.env.VITE_ENCRYPT_KEY;
+      const secret = (import.meta as any).env.VITE_ENCRYPT_KEY;
 
       const password_enc = sessionStorage.getItem("c_aP");
       if (!password_enc) throw new Error("No encrypted password found");
@@ -65,19 +126,74 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
 
       const wallet = await ethers.Wallet.fromEncryptedJson(encryptedJson, password);
 
-      // Parse balance and fee
-      const balance = parseFloat(selectedToken.balance || "0");
-      const enteredAmount = parseFloat(amount || "0");
-      const estimatedFee = parseFloat(feeEstimate || "0"); // this comes from useEstimateGas
+      const recipient = to.trim();
 
-      // --- ✅ Pre-send balance & fee check ---
+      if (!recipient) {
+        Swal.fire({
+          title: "Recipient Required",
+          text: "Please enter a valid recipient address before sending.",
+          icon: "warning",
+          background: "#02010C",
+          color: "#ffffff",
+        });
+        return;
+      }
+
+      const amountValue = amount.trim();
+
+      const estimateParams = {
+        chainKey: selectedToken.chainKey,
+        to: recipient,
+        from: selectedToken.userAddress,
+        amount: amountValue,
+        token: selectedToken.type === "token" ? selectedToken.token : null,
+        decimals: selectedToken.decimals,
+      };
+
+      let currentQuote;
+      try {
+        currentQuote = await estimateGas(estimateParams);
+        setGasQuote(currentQuote);
+        setGasWarning(currentQuote?.warning || null);
+        setGasErrorMessage("");
+      } catch (err: any) {
+        Swal.fire({
+          title: "Gas Estimation Failed",
+          text: err?.message || "Unable to estimate gas fees for this transaction.",
+          icon: "error",
+          background: "#02010C",
+          color: "#ffffff",
+        });
+        return;
+      }
+
+      if (!currentQuote?.hasEnoughForEstimated) {
+        const shortfall = currentQuote?.shortfallEstimated;
+        Swal.fire({
+          title: "Insufficient Gas Balance",
+          text: shortfall
+            ? `You are short by ~${formatAmount(shortfall)} ${currentQuote.symbol}.`
+            : "You don’t have enough native balance to cover gas fees.",
+          icon: "warning",
+          background: "#02010C",
+          color: "#ffffff",
+        });
+        return;
+      }
+
+  const estimatedFee = parseFloat(currentQuote?.estimatedFeeNative || "0");
+  const nativeBalance = parseFloat(currentQuote?.nativeBalance || "0");
+  const enteredAmount = parseFloat(amountValue || "0");
+      const nativeSymbol = currentQuote?.symbol || selectedToken.chainNativeSymbol || selectedToken.symbol;
+  const tokenDecimals = selectedToken.decimals || 18;
+  let tokenAmountWei: bigint | null = null;
+
       if (selectedToken.type !== "token") {
-        // Native ETH send (needs gas)
         const totalNeeded = enteredAmount + estimatedFee;
-        if (totalNeeded > balance) {
-          Swal.fire({
+        if (totalNeeded > nativeBalance) {
+          await Swal.fire({
             title: "Insufficient Balance",
-            text: `You need at least ${totalNeeded.toFixed(6)} ${selectedToken.symbol} (amount + gas fee) to complete this transaction.`,
+            text: `You need roughly ${formatAmount(totalNeeded)} ${nativeSymbol} (amount + estimated gas). Available: ${formatAmount(nativeBalance)} ${nativeSymbol}.`,
             icon: "warning",
             background: "#02010C",
             color: "#ffffff",
@@ -85,11 +201,49 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
           return;
         }
       } else {
-        // Token send: need some ETH (or chain native) to cover gas
-        if (estimatedFee > 0 && balance < estimatedFee) {
-          Swal.fire({
+        try {
+          tokenAmountWei = ethers.parseUnits(amountValue, tokenDecimals);
+        } catch (parseErr) {
+          await Swal.fire({
+            title: "Invalid Amount",
+            text: "The amount has more decimal places than this token allows.",
+            icon: "warning",
+            background: "#02010C",
+            color: "#ffffff",
+          });
+          return;
+        }
+
+        if (selectedToken.balanceWei) {
+          const balanceWei = BigInt(selectedToken.balanceWei);
+          if (tokenAmountWei > balanceWei) {
+            const availableDisplay = formatAmount(ethers.formatUnits(balanceWei, tokenDecimals));
+            await Swal.fire({
+              title: "Not Enough Token Balance",
+              text: `You are trying to send ${formatAmount(amountValue)} ${selectedToken.symbol} but only have ${availableDisplay} available.`,
+              icon: "warning",
+              background: "#02010C",
+              color: "#ffffff",
+            });
+            return;
+          }
+        } else {
+          const tokenBalance = getNumericBalance(selectedToken);
+          if (enteredAmount > tokenBalance) {
+            await Swal.fire({
+              title: "Not Enough Token Balance",
+              text: `You are trying to send ${formatAmount(amountValue)} ${selectedToken.symbol} but only have ${formatAmount(tokenBalance)} available.`,
+              icon: "warning",
+              background: "#02010C",
+              color: "#ffffff",
+            });
+            return;
+          }
+        }
+        if (estimatedFee > 0 && nativeBalance < estimatedFee) {
+          await Swal.fire({
             title: "Insufficient Gas Funds",
-            text: `You need at least ${estimatedFee.toFixed(6)} ${selectedToken.chainNativeSymbol} to pay the transaction fee.`,
+            text: `You need roughly ${formatAmount(estimatedFee)} ${nativeSymbol} for gas. Available: ${formatAmount(nativeBalance)} ${nativeSymbol}.`,
             icon: "warning",
             background: "#02010C",
             color: "#ffffff",
@@ -97,42 +251,56 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
           return;
         }
       }
-      // --- ✅ End pre-check ---
 
-      // Build txData (native or token)
       const txData =
         selectedToken.type === "token"
           ? {
               to: selectedToken.token,
               data: new ethers.Interface(ERC20_ABI).encodeFunctionData(
                 "transfer",
-                [to, ethers.parseUnits(amount, selectedToken.decimals || 18)]
+                [recipient, tokenAmountWei ?? ethers.parseUnits(amountValue, tokenDecimals)]
               ),
             }
           : {
-              to,
-              value: ethers.parseEther(amount),
+              to: recipient,
+              value: ethers.parseEther(amountValue),
             };
 
-      // Prepare transaction via backend
-      const prepared = await prepareTx(selectedToken.chainKey, txData, wallet.address);
+      const preparedResponse = await prepareTx(selectedToken.chainKey, txData, wallet.address);
+      if (preparedResponse?.meta) {
+        setGasQuote(preparedResponse.meta);
+        setGasWarning(preparedResponse.meta.warning || null);
+        setGasErrorMessage("");
+        if (preparedResponse.meta.hasEnoughForEstimated === false) {
+          const shortfall = preparedResponse.meta.shortfallEstimated;
+          Swal.fire({
+            title: "Gas Balance Too Low",
+            text: shortfall
+              ? `After recalculating, you still need about ${formatAmount(shortfall)} ${preparedResponse.meta.symbol} more for gas.`
+              : "After recalculating fees, there isn’t enough native balance to cover gas.",
+            icon: "warning",
+            background: "#02010C",
+            color: "#ffffff",
+          });
+          return;
+        }
+      }
+      const preparedTx = preparedResponse?.tx || preparedResponse;
 
-      // --- 🔧 Normalize backend BigNumber fields ---
       const normalizeTx = (tx: any) => {
         const normalized: any = { ...tx };
         for (const key in normalized) {
           const val = normalized[key];
           if (val && typeof val === "object" && "hex" in val) {
-            normalized[key] = val.hex; // convert ethers BigNumber-like objects
+            normalized[key] = val.hex;
           }
         }
         return normalized;
       };
 
-      const fullTx = normalizeTx({ ...txData, ...prepared });
-      // --- ✅ END FIX ---
+      const transaction = normalizeTx({ ...txData, ...preparedTx });
 
-      const signedTx = await wallet.signTransaction(fullTx);
+      const signedTx = await wallet.signTransaction(transaction);
       const data = await broadcastTx(selectedToken.chainKey, signedTx);
 
       Swal.fire({
@@ -146,6 +314,9 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
       setAmount("");
       setTo("");
       setSelectedToken(null);
+      setGasQuote(null);
+      setGasWarning(null);
+      setGasErrorMessage("");
       refetchPortfolio();
     } catch (err: any) {
       console.error("Transaction error:", err);
@@ -162,10 +333,10 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
 
   useEffect(() => {
     if (selectedToken && amount) {
-      const userBalance = parseFloat(selectedToken.balance || "0");
-      const enteredAmount = parseFloat(amount);
+      const userBalance = getNumericBalance(selectedToken);
+      const enteredAmount = parseFloat(amount.trim());
 
-      if (enteredAmount > userBalance) {
+      if (Number.isFinite(enteredAmount) && enteredAmount > userBalance) {
         setErrorTransaction("Not enough balance");
       } else {
         setErrorTransaction("");
@@ -176,8 +347,14 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
   }, [amount, selectedToken]);
 
   const handleSendClick = () => {
-    if (!to || !amount) {
+    const amountValue = amount.trim();
+
+    if (!to.trim() || !amountValue) {
       setErrorTransaction("Both recipient address and amount are required");
+      return;
+    }
+    if (Number(amountValue) <= 0) {
+      setErrorTransaction("Amount must be greater than zero");
       return;
     }
     sendTransaction();
@@ -205,19 +382,31 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
                     key={`${chain.chain}-${idx}`}
                     className="px-2 rounded cursor-pointer hover:bg-white/2"
                     onClick={() =>
-                      setSelectedToken({
-                        ...item,
-                        chainKey:
-                          chainKeyMap[chain.chain] ||
-                          chain.chain.toLowerCase().replace(/\s+/g, "-"),
-                        chainLabel: chain.chain,
-                        type: item.type,
-                        token: item.token,
-                        decimals: item.decimals || 18,
-                        chainNativeSymbol: chain.nativeSymbol,
-                        balance: parseFloat(item.balance).toFixed(4),
-                        userAddress: portfolio.address,
-                        chainId: chain.chainId,
+                      setSelectedToken(() => {
+                        const decimals = item.decimals || 18;
+                        let balanceWei = null;
+                        try {
+                          balanceWei = ethers.parseUnits(String(item.balance ?? "0"), decimals).toString();
+                        } catch (parseErr) {
+                          console.warn("Failed to parse token balance", parseErr);
+                        }
+
+                        return {
+                          ...item,
+                          chainKey:
+                            chainKeyMap[chain.chain] ||
+                            chain.chain.toLowerCase().replace(/\s+/g, "-"),
+                          chainLabel: chain.chain,
+                          type: item.type,
+                          token: item.token,
+                          decimals,
+                          chainNativeSymbol: chain.nativeSymbol,
+                          balance: parseFloat(item.balance).toFixed(4),
+                          rawBalance: item.balance,
+                          balanceWei,
+                          userAddress: portfolio.address,
+                          chainId: chain.chainId,
+                        };
                       })
                     }
                   >
@@ -226,6 +415,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
                       chain={chain.chain}
                       symbol={item.symbol || "UNKNOWN"}
                       balance={parseFloat(item.balance).toFixed(4)}
+                      usdValue={item.usdValue ?? null}
                     />
                   </div>
                 ))
@@ -280,7 +470,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
 
             <button
               type="button"
-              onClick={() => setAmount(selectedToken.balance)}
+              onClick={() => setAmount((selectedToken.rawBalance ?? selectedToken.balance) || "0")}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-white cursor-pointer"
             >
               MAX
@@ -291,15 +481,41 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
             <p className="text-red-500 text-sm mb-0">{errorTransaction}</p>
           )}
 
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-start gap-4">
             <p className="text-sm text-[#EFEFEF7A]">
-              Balance: {selectedToken.balance}
+              Balance: {formatAmount(selectedToken.rawBalance ?? selectedToken.balance)} {selectedToken.symbol}
             </p>
-            {feeEstimate && (
-              <p className="text-[#EFEFEF7A] text-sm">
-                Fee: <b>{feeEstimate}</b>
-              </p>
-            )}
+            <div className="text-right">
+              {gasLoading && <p className="text-[#EFEFEF7A] text-sm">Estimating…</p>}
+              {gasQuote && !gasLoading && (
+                <div className="text-[#EFEFEF7A] text-sm">
+                  <p>
+                    Fee (est): <b>{formatAmount(gasQuote.estimatedFeeNative)} {gasQuote.symbol}</b>
+                  </p>
+                  <p className="text-xs text-[#EFEFEF7A]">
+                    Max (buffered): {formatAmount(gasQuote.maxFeeNative)} {gasQuote.symbol}
+                  </p>
+                  <p className="text-xs text-[#EFEFEF7A]">
+                    Native balance: {formatAmount(gasQuote.nativeBalance)} {gasQuote.symbol}
+                  </p>
+                  <p className="text-xs text-[#EFEFEF7A]">
+                    Base fee: {formatAmount(gasQuote.baseFeePerGasGwei)} gwei
+                  </p>
+                  <p className="text-xs text-[#EFEFEF7A]">
+                    Max fee per gas: {formatAmount(gasQuote.maxFeePerGasGwei)} gwei
+                  </p>
+                  <p className="text-xs text-[#EFEFEF7A]">
+                    Priority fee: {formatAmount(gasQuote.maxPriorityFeePerGasGwei)} gwei
+                  </p>
+                </div>
+              )}
+              {gasErrorMessage && !gasLoading && (
+                <p className="text-red-400 text-xs">{gasErrorMessage}</p>
+              )}
+              {gasWarning && !gasLoading && !gasErrorMessage && (
+                <p className="text-amber-300 text-xs">{gasWarning.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3">
