@@ -1,25 +1,35 @@
 import { useState, useCallback } from "react";
 
+const toErrorObject = (raw) => {
+  if (!raw) return { message: "Request failed" };
+  if (raw.error) {
+    if (typeof raw.error === "string") {
+      return { message: raw.error };
+    }
+    return { ...raw.error };
+  }
+  return { message: raw.message || "Request failed" };
+};
+
 export default function useEstimateGas() {
-  const [feeEstimate, setFeeEstimate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const estimateGas = useCallback(async ({ chainKey, to, from, amount, token, decimals }) => {
-    const authToken = localStorage.getItem("auth_token");
-    if (!authToken) {
-      setError("No auth token found");
-      return null;
-    }
+  const estimateGas = useCallback(
+    async ({ chainKey, to, from, amount, token, decimals }) => {
+      const authToken = localStorage.getItem("auth_token");
+      if (!authToken) {
+        const errObj = { code: "NO_AUTH", message: "No auth token found" };
+        setError(errObj);
+        return null;
+      }
 
-    try {
-      setLoading(true);
-      setError(null);
-      setFeeEstimate(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-      const res = await fetch(`${apiUrl}/wallet/${chainKey}/estimateGas`,
-        {
+        const res = await fetch(`${apiUrl}/wallet/${chainKey}/estimateGas`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -30,26 +40,36 @@ export default function useEstimateGas() {
             from,
             amount,
             token: token || null,
-            decimals
+            decimals,
           }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          const errPayload = toErrorObject(data);
+          if (data?.context) {
+            errPayload.context = data.context;
+          }
+          const error = Object.assign(new Error(errPayload.message || "Failed to estimate gas"), errPayload);
+          setError(error);
+          throw error;
         }
-      );
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+        return data;
+      } catch (err) {
+        console.error("Gas estimation failed:", err);
+        const normalized = err && typeof err === "object"
+          ? { message: err.message || "Failed to estimate gas", code: err.code, ...err }
+          : { message: "Failed to estimate gas" };
+        const errorObj = Object.assign(new Error(normalized.message), normalized);
+        setError(errorObj);
+        throw errorObj;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiUrl]
+  );
 
-      const formatted = `${data.fee} ${data.symbol}`;
-      setFeeEstimate(formatted);
-      return formatted;
-    } catch (err) {
-      console.error("Gas estimation failed:", err);
-      setError(err.message || "Failed to estimate gas");
-      setFeeEstimate(null);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { estimateGas, feeEstimate, loading, error };
+  return { estimateGas, loading, error };
 }
