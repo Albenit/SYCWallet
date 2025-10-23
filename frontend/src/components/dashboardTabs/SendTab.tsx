@@ -370,69 +370,71 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
           {portfolioError && (
             <p className="text-red-500 text-sm">{portfolioError}</p>
           )}
-          {portfolio?.portfolio?.length > 0 ? (
-            portfolio.portfolio.map((chain: any) => {
-              const nonZeroItems = chain.items.filter(
-                (item: any) => parseFloat(item.balance) > 0
-              );
+          <div className="max-h-[280px] overflow-y-auto custom-scroll">
+            {portfolio?.portfolio?.length > 0 ? (
+              portfolio.portfolio.map((chain: any) => {
+                const nonZeroItems = chain.items.filter(
+                  (item: any) => parseFloat(item.balance) > 0
+                );
 
-              return nonZeroItems.length > 0 ? (
-                nonZeroItems.map((item: any, idx: number) => (
+                return nonZeroItems.length > 0 ? (
+                  nonZeroItems.map((item: any, idx: number) => (
+                    <div
+                      key={`${chain.chain}-${idx}`}
+                      className="rounded cursor-pointer hover:bg-white/2"
+                      onClick={() =>
+                        setSelectedToken(() => {
+                          const decimals = item.decimals || 18;
+                          let balanceWei = null;
+                          try {
+                            balanceWei = ethers.parseUnits(String(item.balance ?? "0"), decimals).toString();
+                          } catch (parseErr) {
+                            console.warn("Failed to parse token balance", parseErr);
+                          }
+
+                          return {
+                            ...item,
+                            chainKey:
+                              chainKeyMap[chain.chain] ||
+                              chain.chain.toLowerCase().replace(/\s+/g, "-"),
+                            chainLabel: chain.chain,
+                            type: item.type,
+                            token: item.token,
+                            decimals,
+                            chainNativeSymbol: chain.nativeSymbol,
+                            balance: parseFloat(item.balance).toFixed(4),
+                            rawBalance: item.balance,
+                            balanceWei,
+                            userAddress: portfolio.address,
+                            chainId: chain.chainId,
+                          };
+                        })
+                      }
+                    >
+                      <Row
+                        icon={item.logo}
+                        chain={chain.chain}
+                        symbol={item.symbol || "UNKNOWN"}
+                        balance={parseFloat(item.balance).toFixed(5)}
+                        usdValue={item.usdValue ?? null}
+                      />
+                    </div>
+                  ))
+                ) : (
                   <div
-                    key={`${chain.chain}-${idx}`}
-                    className="px-2 rounded cursor-pointer hover:bg-white/2"
-                    onClick={() =>
-                      setSelectedToken(() => {
-                        const decimals = item.decimals || 18;
-                        let balanceWei = null;
-                        try {
-                          balanceWei = ethers.parseUnits(String(item.balance ?? "0"), decimals).toString();
-                        } catch (parseErr) {
-                          console.warn("Failed to parse token balance", parseErr);
-                        }
-
-                        return {
-                          ...item,
-                          chainKey:
-                            chainKeyMap[chain.chain] ||
-                            chain.chain.toLowerCase().replace(/\s+/g, "-"),
-                          chainLabel: chain.chain,
-                          type: item.type,
-                          token: item.token,
-                          decimals,
-                          chainNativeSymbol: chain.nativeSymbol,
-                          balance: parseFloat(item.balance).toFixed(4),
-                          rawBalance: item.balance,
-                          balanceWei,
-                          userAddress: portfolio.address,
-                          chainId: chain.chainId,
-                        };
-                      })
-                    }
+                    key={chain.chain}
+                    className="px-6 text-center text-gray-400 text-sm"
                   >
-                    <Row
-                      icon={item.logo}
-                      chain={chain.chain}
-                      symbol={item.symbol || "UNKNOWN"}
-                      balance={parseFloat(item.balance).toFixed(4)}
-                      usdValue={item.usdValue ?? null}
-                    />
+                    No assets with balance.
                   </div>
-                ))
-              ) : (
-                <div
-                  key={chain.chain}
-                  className="px-6 text-center text-gray-400 text-sm"
-                >
-                  No assets with balance.
-                </div>
-              );
-            })
-          ) : (
-            <div className="px-6 text-center text-gray-400 text-sm">
-              No tokens added yet.
-            </div>
-          )}
+                );
+              })
+            ) : (
+              <div className="px-6 text-center text-gray-400 text-sm">
+                No tokens added yet.
+              </div>
+            )}
+          </div>
         </>
       )}
 
@@ -495,10 +497,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
                   <p className="text-xs text-[#EFEFEF7A]">
                     Max (buffered): {formatAmount(gasQuote.maxFeeNative)} {gasQuote.symbol}
                   </p>
-                  <p className="text-xs text-[#EFEFEF7A]">
-                    Native balance: {formatAmount(gasQuote.nativeBalance)} {gasQuote.symbol}
-                  </p>
-                  <p className="text-xs text-[#EFEFEF7A]">
+                  {/* <p className="text-xs text-[#EFEFEF7A]">
                     Base fee: {formatAmount(gasQuote.baseFeePerGasGwei)} gwei
                   </p>
                   <p className="text-xs text-[#EFEFEF7A]">
@@ -506,7 +505,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
                   </p>
                   <p className="text-xs text-[#EFEFEF7A]">
                     Priority fee: {formatAmount(gasQuote.maxPriorityFeePerGasGwei)} gwei
-                  </p>
+                  </p> */}
                 </div>
               )}
               {gasErrorMessage && !gasLoading && (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 const env = import.meta.env;
 
@@ -7,7 +7,7 @@ export default function useCheckBalance() {
   const [error, setError] = useState(null);
   const [data, setData] = useState(null);
 
-  const checkBalance = async (address, chain) => {
+  const checkBalance = useCallback(async (address, chain, token = null) => {
     try {
       setLoading(true);
       setError(null);
@@ -16,7 +16,7 @@ export default function useCheckBalance() {
       const res = await fetch(`${env.VITE_API_URL}/swap/check-balance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address, chain }),
+        body: JSON.stringify({ address, chain, token }),
       });
 
       const json = await res.json();
@@ -33,7 +33,7 @@ export default function useCheckBalance() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return { checkBalance, loading, error, data };
 }

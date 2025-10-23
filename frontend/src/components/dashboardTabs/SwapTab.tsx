@@ -25,6 +25,8 @@ export default function SwapTab() {
   const [fromAmount, setFromAmount] = useState("");
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [swapping, setSwapping] = useState(false);
+  const [fromBalance, setFromBalance] = useState<any>(null);
+  const [fromBalanceLoading, setFromBalanceLoading] = useState(false);
   const { checkBalance } = useCheckBalance();
   const { createSwap } = useChangeNowSwap();
 
@@ -64,6 +66,22 @@ export default function SwapTab() {
     return num.toPrecision(3);
   };
 
+  const formatBalanceDisplay = (value: string) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return value;
+    if (num === 0) return "0";
+    if (num >= 1) {
+      return num.toFixed(4).replace(/\.0+$/, "").replace(/0+$/, "").replace(/\.$/, "");
+    }
+    return num
+      .toPrecision(4)
+      .replace(/\.0+$/, "")
+      .replace(/0+e/, "e")
+      .replace(/\.e/, "e")
+      .replace(/0+$/, "")
+      .replace(/\.$/, "");
+  };
+
   useEffect(() => {
     const encryptedJson = localStorage.getItem("encryptedWallet");
     const password_enc = sessionStorage.getItem("c_aP");
@@ -80,6 +98,61 @@ export default function SwapTab() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBalance = async () => {
+      if (!walletAddress || !fromChain?.key || !fromToken) {
+        setFromBalance(null);
+        setFromBalanceLoading(false);
+        return;
+      }
+
+      setFromBalanceLoading(true);
+      try {
+        const tokenPayload = fromToken.native || !fromToken.address
+          ? null
+          : {
+              address: fromToken.address,
+              decimals: fromToken.decimals,
+              symbol: fromToken.symbol,
+            };
+
+  const result = await (checkBalance as any)(walletAddress, fromChain.key, tokenPayload);
+        if (cancelled) return;
+
+        setFromBalance({
+          value: result?.balance ?? "0",
+          raw: result?.rawBalance ?? result?.balance ?? "0",
+          symbol: (
+            result?.symbol ||
+            fromToken?.symbol ||
+            fromChain?.nativeSymbol ||
+            ""
+          ).toUpperCase(),
+          decimals:
+            result?.decimals ??
+            fromToken?.decimals ??
+            (fromToken?.native ? fromChain?.decimals ?? 18 : 18),
+        });
+      } catch (err) {
+        if (!cancelled) {
+          setFromBalance(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setFromBalanceLoading(false);
+        }
+      }
+    };
+
+    loadBalance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [walletAddress, fromChain?.key, fromChain?.decimals, fromChain?.nativeSymbol, fromToken, checkBalance]);
 
   const handleSwap = async () => {
     try {
@@ -123,7 +196,7 @@ export default function SwapTab() {
         return;
       }
 
-      const payload = {
+      const payload: any = {
         sellAsset: fromToken,
         buyAsset: toToken,
         sellAmount: String(fromAmount),
@@ -143,7 +216,7 @@ export default function SwapTab() {
       if (!tx?.to || (!tx?.data && !tx?.value))
         throw new Error("ChangeNOW did not return a sendable transaction");
 
-      const baseTx = { to: tx.to };
+  const baseTx: any = { to: tx.to };
       if (tx.data) baseTx.data = tx.data;
       if (tx.value) baseTx.value = tx.value;
 
@@ -218,6 +291,11 @@ export default function SwapTab() {
     setToToken(tempT);
   };
 
+  const handleFillMax = () => {
+    if (!fromBalance?.value) return;
+    setFromAmount(fromBalance.value);
+  };
+
   return (
     <div className="space-y-4 max-w-sm mx-auto">
       {/* FROM */}
@@ -237,28 +315,54 @@ export default function SwapTab() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {fromToken?.logo && <img src={fromToken.logo} alt="" width={25} height={25} />}
-            <div
-              className="flex items-center cursor-pointer"
-              onClick={() => {
-                if (!fromChain) return Swal.fire("Select chain first", "", "info");
-                setSelecting("from");
-                setIsTokenModalOpen(true);
-              }}
-            >
-              <span>{fromToken?.symbol?.toUpperCase() || "Select Token"}</span>
-              <ChevronRight size={18} className="opacity-60" />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {fromToken?.logo && <img src={fromToken.logo} alt="" width={25} height={25} />}
+              <div
+                className="flex items-center cursor-pointer"
+                onClick={() => {
+                  if (!fromChain) return Swal.fire("Select chain first", "", "info");
+                  setSelecting("from");
+                  setIsTokenModalOpen(true);
+                }}
+              >
+                <span>{fromToken?.symbol?.toUpperCase() || "Select Token"}</span>
+                <ChevronRight size={18} className="opacity-60" />
+              </div>
+            </div>
+
+            <div className="relative w-45">
+              <input
+                type="number"
+                placeholder="0"
+                value={fromAmount}
+                onChange={(e) => setFromAmount(e.target.value)}
+                  className="w-full pr-10 text-right bg-transparent text-white text-sm focus:outline-none
+                    [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+              <button
+                type="button"
+                onClick={handleFillMax}
+                disabled={fromBalanceLoading || !fromBalance || Number(fromBalance.value) <= 0}
+                className="absolute right-0 top-1/2 -translate-y-1/2 px-2 text-xs font-semibold text-white cursor-pointer disabled:cursor-not-allowed"
+              >
+                MAX
+              </button>
             </div>
           </div>
-          <input
-            type="number"
-            placeholder="0"
-            value={fromAmount}
-            onChange={(e) => setFromAmount(e.target.value)}
-            className="w-24 text-right bg-transparent text-white text-sm focus:outline-none"
-          />
+
+          <div className="flex justify-end">
+            <p className="text-xs text-gray-400">
+              {fromBalanceLoading
+                ? "Balance: ..."
+                : fromBalance
+                ? `${formatBalanceDisplay(fromBalance.value)} ${fromBalance.symbol}`
+                : fromToken
+                ? `Balance: 0 ${fromToken.symbol?.toUpperCase() || ""}`
+                : ""}
+            </p>
+          </div>
         </div>
       </div>
 
