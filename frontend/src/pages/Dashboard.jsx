@@ -110,13 +110,11 @@ export default function Dashboard() {
 
       {/* Total Balance */}
       <div className="px-6 pb-4 pt-6">
-        <div className="flex items-center gap-2 text-3xl font-bold tracking-wide sm:text-4xl">
-          {portfolioLoading ? (
-            "$…"
-          ) : (
+        <div className="flex items-center  text-3xl font-bold tracking-wide sm:text-4xl">
+          {portfolioLoading ? ("$…") : (
             <>
-              {totalUsdValue.toFixed(2)}
-              <span className="-mb-1 text-sm text-gray-400 uppercase">$</span>
+              <span className="text-3xl">$</span>
+              <span className="text-3xl">{totalUsdValue.toFixed(2)}</span>
             </>
           )}
         </div>

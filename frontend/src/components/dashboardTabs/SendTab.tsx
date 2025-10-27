@@ -26,6 +26,8 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
   const [gasWarning, setGasWarning] = useState<any>(null);
   const [gasErrorMessage, setGasErrorMessage] = useState("");
 
+  const [cntOfTokensWithBalance, setCntOfTokensWithBalance] = useState(0);
+
   const { prepareTx } = usePrepareTx();
   const { sendTransaction: broadcastTx } = useSendTransaction();
   const { estimateGas, loading: gasLoading } = useEstimateGas();
@@ -371,65 +373,74 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
             <p className="text-red-500 text-sm">{portfolioError}</p>
           )}
           <div className="max-h-[280px] overflow-y-auto custom-scroll">
-            {portfolio?.portfolio?.length > 0 ? (
-              portfolio.portfolio.map((chain: any) => {
+            {portfolio?.portfolio?.length > 0 ? (() => {
+              let count = 0;
+
+              const rendered = portfolio.portfolio.map((chain: any) => {
                 const nonZeroItems = chain.items.filter(
                   (item: any) => parseFloat(item.balance) > 0
                 );
 
-                return nonZeroItems.length > 0 ? (
-                  nonZeroItems.map((item: any, idx: number) => (
-                    <div
-                      key={`${chain.chain}-${idx}`}
-                      className="rounded cursor-pointer hover:bg-white/2"
-                      onClick={() =>
-                        setSelectedToken(() => {
-                          const decimals = item.decimals || 18;
-                          let balanceWei = null;
-                          try {
-                            balanceWei = ethers.parseUnits(String(item.balance ?? "0"), decimals).toString();
-                          } catch (parseErr) {
-                            console.warn("Failed to parse token balance", parseErr);
-                          }
+                count += nonZeroItems.length;
 
-                          return {
-                            ...item,
-                            chainKey:
-                              chainKeyMap[chain.chain] ||
-                              chain.chain.toLowerCase().replace(/\s+/g, "-"),
-                            chainLabel: chain.chain,
-                            type: item.type,
-                            token: item.token,
-                            decimals,
-                            chainNativeSymbol: chain.nativeSymbol,
-                            balance: parseFloat(item.balance).toFixed(4),
-                            rawBalance: item.balance,
-                            balanceWei,
-                            userAddress: portfolio.address,
-                            chainId: chain.chainId,
-                          };
-                        })
-                      }
-                    >
-                      <Row
-                        icon={item.logo}
-                        chain={chain.chain}
-                        symbol={item.symbol || "UNKNOWN"}
-                        balance={parseFloat(item.balance).toFixed(5)}
-                        usdValue={item.usdValue ?? null}
-                      />
-                    </div>
-                  ))
-                ) : (
+                return nonZeroItems.map((item: any, idx: number) => (
                   <div
-                    key={chain.chain}
-                    className="px-6 text-center text-gray-400 text-sm"
+                    key={`${chain.chain}-${idx}`}
+                    className="rounded cursor-pointer hover:bg-white/2"
+                    onClick={() => {
+                      const decimals = item.decimals || 18;
+                      let balanceWei = null;
+                      try {
+                        balanceWei = ethers
+                          .parseUnits(String(item.balance ?? "0"), decimals)
+                          .toString();
+                      } catch {}
+                      setSelectedToken({
+                        ...item,
+                        chainKey:
+                          chainKeyMap[chain.chain] ||
+                          chain.chain.toLowerCase().replace(/\s+/g, "-"),
+                        chainLabel: chain.chain,
+                        type: item.type,
+                        token: item.token,
+                        decimals,
+                        chainNativeSymbol: chain.nativeSymbol,
+                        balance: parseFloat(item.balance).toFixed(4),
+                        rawBalance: item.balance,
+                        balanceWei,
+                        userAddress: portfolio.address,
+                        chainId: chain.chainId,
+                      });
+                    }}
                   >
+                    <Row
+                      icon={item.logo}
+                      chain={chain.chain}
+                      symbol={item.symbol || "UNKNOWN"}
+                      balance={parseFloat(item.balance).toFixed(5)}
+                      usdValue={item.usdValue ?? null}
+                    />
+                  </div>
+                ));
+              });
+
+              // update the counter state after rendering
+              if (count !== cntOfTokensWithBalance) {
+                setCntOfTokensWithBalance(count);
+              }
+
+              // show message if no tokens had non-zero balance
+              if (count === 0) {
+                return (
+                  <div className="px-6 text-center text-gray-400 text-sm">
                     No assets with balance.
                   </div>
                 );
-              })
-            ) : (
+              }
+
+              return rendered;
+            })()
+            : (
               <div className="px-6 text-center text-gray-400 text-sm">
                 No tokens added yet.
               </div>
