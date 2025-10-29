@@ -22,7 +22,7 @@ export default function Row({
           </div>
           <div className="mt-1 flex items-center gap-2 text-xs text-gray-300">
             {priceUsd && (
-              <span>${Number(priceUsd).toLocaleString()}</span>
+              <span>${priceUsd}</span>
             )}
             {change && (
               <span
