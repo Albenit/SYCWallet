@@ -42,6 +42,7 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
                   <Row
                     icon={item?.logo}
                     chain={chain.chain}
+                    fullName={item?.fullName || "UNKNOWN" }
                     symbol={item?.symbol || "UNKNOWN"}
                     priceUsd={livePrice ? livePrice.price : "0.00"}
                     change={livePrice ? livePrice.change : 0}

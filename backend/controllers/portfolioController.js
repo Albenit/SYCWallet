@@ -16,7 +16,6 @@ exports.getPortfolio = async (req, res) => {
     }
 
     const userAddr = address.toLowerCase();
-
     const selectedTokens = await UserToken.find({ user: user._id }).lean();
 
     const portfolio = await Promise.all(
@@ -41,37 +40,35 @@ exports.getPortfolio = async (req, res) => {
                 return {
                   type: "native",
                   symbol: t.symbol || chainCfg.nativeSymbol,
+                  fullName: t.fullName || chainCfg.fullName || chainCfg.label,
                   balance_raw: nativeRaw.toString(),
                   balance: nativeBal,
                   decimals: t.decimals || chainCfg.decimals,
-                  binanceSymbol: t.binanceSymbol || null, 
+                  binanceSymbol: t.binanceSymbol || chainCfg.binanceSymbol || null,
                   logo: chainCfg.logo
                 };
-              } else {
-                const tokenAddr = t.tokenAddress.toLowerCase();
-                const contract = new ethers.Contract(
-                  tokenAddr,
-                  ERC20_ABI,
-                  provider
-                );
-                const raw = await contract.balanceOf(userAddr);
-                const humanBal = ethers.utils.formatUnits(raw, t.decimals);
-
-                const tokenMeta = chainCfg.tokens.find(
-                  (tk) => tk.address.toLowerCase() === tokenAddr
-                );
-
-                return {
-                  type: "token",
-                  symbol: t.symbol,
-                  token: tokenAddr,
-                  balance_raw: raw.toString(),
-                  balance: humanBal,
-                  decimals: t.decimals,
-                  binanceSymbol: t.binanceSymbol || null, 
-                  logo: tokenMeta ? tokenMeta.logo : null
-                };
               }
+
+              const tokenAddr = t.tokenAddress.toLowerCase();
+              const contract = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+              const raw = await contract.balanceOf(userAddr);
+              const humanBal = ethers.utils.formatUnits(raw, t.decimals);
+
+              const tokenMeta = (chainCfg.tokens || []).find(
+                (tk) => tk.address.toLowerCase() === tokenAddr
+              );
+
+              return {
+                type: "token",
+                symbol: t.symbol,
+                fullName: t.fullName || (tokenMeta ? tokenMeta.fullName : null),
+                token: tokenAddr,
+                balance_raw: raw.toString(),
+                balance: humanBal,
+                decimals: t.decimals,
+                binanceSymbol: t.binanceSymbol || (tokenMeta ? tokenMeta.binanceSymbol : null),
+                logo: tokenMeta ? tokenMeta.logo : null
+              };
             } catch (err) {
               return {
                 type: t.tokenAddress ? "token" : "native",
@@ -111,7 +108,6 @@ exports.getAllTokens = async (req, res) => {
     }
 
     const userTokens = await UserToken.find({ user: user._id }).lean();
-
     const activeMap = new Set(
       userTokens.map(t => `${t.chain}:${t.tokenAddress || 'native'}`)
     );
@@ -126,11 +122,12 @@ exports.getAllTokens = async (req, res) => {
         chain: chainKey,
         chainLabel: chainCfg.label,
         symbol: chainCfg.nativeSymbol,
+        fullName: chainCfg.fullName || chainCfg.label,
         decimals: chainCfg.decimals,
         binanceSymbol: chainCfg.binanceSymbol,
         logo: chainCfg.logo,
         address: null,
-        active: activeMap.has(`${chainKey}:native`), 
+        active: activeMap.has(`${chainKey}:native`),
       });
 
       if (Array.isArray(chainCfg.tokens)) {
@@ -140,6 +137,7 @@ exports.getAllTokens = async (req, res) => {
             chain: chainKey,
             chainLabel: chainCfg.label,
             symbol: t.symbol,
+            fullName: t.fullName || null,
             decimals: t.decimals,
             binanceSymbol: t.binanceSymbol,
             address: t.address.toLowerCase(),
@@ -158,6 +156,7 @@ exports.getAllTokens = async (req, res) => {
 
     res.json(allTokens);
   } catch (e) {
+    console.error("getAllTokens error:", e);
     res.status(400).json({ error: e.message || "failed" });
   }
 };
@@ -167,7 +166,6 @@ exports.toggleToken = async (req, res) => {
     const { address } = req.user;
     const { chain, tokenAddress } = req.body;
 
-    
     const user = await User.findOne({ address: address.toLowerCase() });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -184,7 +182,6 @@ exports.toggleToken = async (req, res) => {
       tokenAddress: tokenKey
     });
 
-  
     if (existing) {
       await UserToken.deleteOne({ _id: existing._id });
       return res.json({ success: true, active: false });
@@ -195,6 +192,7 @@ exports.toggleToken = async (req, res) => {
       tokenCfg = {
         address: null,
         symbol: chainCfg.nativeSymbol,
+        fullName: chainCfg.fullName || chainCfg.label,
         decimals: chainCfg.decimals,
         binanceSymbol: chainCfg.binanceSymbol,
       };
@@ -208,6 +206,7 @@ exports.toggleToken = async (req, res) => {
       chain,
       tokenAddress: tokenCfg.address ? tokenCfg.address.toLowerCase() : null,
       symbol: tokenCfg.symbol,
+      fullName: tokenCfg.fullName || null,
       decimals: tokenCfg.decimals,
       binanceSymbol: tokenCfg.binanceSymbol
     });
