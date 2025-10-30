@@ -37,12 +37,15 @@ export default function AllTokensModal({isOpen,onClose,refetchPortfolio,}:any) {
     }
   };
 
-  // filter tokens only in frontend
   const filteredTokens = tokens?.map((chain: any) => ({
     ...chain,
-    tokens: chain.tokens.filter((token: any) =>
-      token.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-    ),
+    tokens: chain.tokens.filter((token: any) => {
+      const query = searchQuery.toLowerCase();
+      return (
+        token.symbol?.toLowerCase().includes(query) ||
+        token.fullName?.toLowerCase().includes(query)
+      );
+    }),
   }));
 
   if (!isOpen) return null;
@@ -91,7 +94,7 @@ export default function AllTokensModal({isOpen,onClose,refetchPortfolio,}:any) {
                         >
                           <div className="flex items-center">
                             <img src={token.logo} alt={token.symbol} className="w-6 h-6 rounded-full mr-2"/>
-                            <span>{token.symbol}</span>
+                            <span>{token.fullName} ({token.symbol})</span>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input

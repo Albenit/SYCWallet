@@ -2,6 +2,7 @@ import React from "react";
 
 export default function Row({
   icon,
+  fullName,
   symbol,
   chain = "Ethereum",
   priceUsd = null,
@@ -15,7 +16,8 @@ export default function Row({
         <img src={icon} alt="" className="flex-none" width={35} height={35} />
         <div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold tracking-wide">{symbol}</span>
+            <span className="font-semibold tracking-wide text-[15px]">{fullName}</span>
+            <span className="font-semibold tracking-wide text-[15px]">({symbol})</span>
             <span className="rounded bg-[#18212d] px-2 py-[2px] text-[11px] text-gray-300">
               {chain}
             </span>

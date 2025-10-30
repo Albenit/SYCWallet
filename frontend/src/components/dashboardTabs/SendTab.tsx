@@ -416,6 +416,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
                     <Row
                       icon={item.logo}
                       chain={chain.chain}
+                      fullName={item.fullName || "UNKNOWN"}
                       symbol={item.symbol || "UNKNOWN"}
                       balance={parseFloat(item.balance).toFixed(5)}
                       usdValue={item.usdValue ?? null}
