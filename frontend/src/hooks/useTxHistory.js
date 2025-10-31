@@ -27,10 +27,6 @@ const chainProviders = {
         type: "alchemy",
         network: Network.BASE_MAINNET
     },
-    zksync: {
-        type: "alchemy",
-        network: Network.ZKSYNC_MAINNET
-    },
     bsc: {
         type: "etherscan",
         url: "https://api.bscscan.com/api",

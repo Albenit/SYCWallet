@@ -7,7 +7,6 @@ const SPECIAL_OVERRIDES = {
 const UNSUPPORTED = {
   matic: new Set(["weth"]),
   avaxc: new Set(["dai", "wbtc", "wavax"]),
-  zksync: new Set(["usdt", "usdc", "dai", "weth", "wbtc"]),
 };
 
 module.exports = function resolveChangeNowTicker(symbol, network) {
