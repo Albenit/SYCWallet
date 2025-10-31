@@ -5,5 +5,4 @@ export const chainKeyMap: Record<string, string> = {
   Arbitrum: "arbitrum",
   Avalanche: "avalanche",
   Base: "base",
-  "zkSync Era": "zksync",
 };

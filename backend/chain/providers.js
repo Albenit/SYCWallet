@@ -7,7 +7,6 @@ const RPC = {
   arbitrum:  process.env.RPC_ARBITRUM,   
   avalanche: process.env.RPC_AVALANCHE,      
   base:      process.env.RPC_BASE,     
-  zksync:    process.env.RPC_ZKSYNC,
 };
 
 function getProvider(chain) {
