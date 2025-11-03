@@ -29,10 +29,6 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
             chain.items?.map((item: any, idx: any) => {
               let livePrice = livePrices[item.binanceSymbol];
 
-              if (!livePrice && ["USDT", "USDC", "DAI"].includes(item.symbol?.toUpperCase())){
-                livePrice = { price: 1, change: 0 }; 
-              }
-              
               const usdValue = livePrice
                 ? (parseFloat(item.balance) * livePrice.price).toFixed(4)
                 : (item.usdValue || 0).toFixed(4);
