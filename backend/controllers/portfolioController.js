@@ -3,20 +3,23 @@ const { ethers } = require("ethers");
 const { getProvider } = require('../chain/providers');
 const ERC20_ABI = require('../chain/erc20');
 const CHAINS = require("../chain/config");
-const UserToken = require('../models/userToken');
-const User = require('../models/User');
+const prisma = require('../config/db');
 
 
 exports.getPortfolio = async (req, res) => {
   try {
     const { address } = req.user;
-    const user = await User.findOne({ address: address.toLowerCase() });
+    const userAddr = address.toLowerCase();
+    const user = await prisma.user.findUnique({
+      where: { address: userAddr },
+    });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const userAddr = address.toLowerCase();
-    const selectedTokens = await UserToken.find({ user: user._id }).lean();
+    const selectedTokens = await prisma.userToken.findMany({
+      where: { userId: user.id },
+    });
 
     const portfolio = await Promise.all(
       Object.entries(CHAINS).map(async ([chainKey, chainCfg]) => {
@@ -102,12 +105,16 @@ exports.getPortfolio = async (req, res) => {
 exports.getAllTokens = async (req, res) => {
   try {
     const { address } = req.user;
-    const user = await User.findOne({ address: address.toLowerCase() });
+    const user = await prisma.user.findUnique({
+      where: { address: address.toLowerCase() },
+    });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const userTokens = await UserToken.find({ user: user._id }).lean();
+    const userTokens = await prisma.userToken.findMany({
+      where: { userId: user.id },
+    });
     const activeMap = new Set(
       userTokens.map(t => `${t.chain}:${t.tokenAddress || 'native'}`)
     );
@@ -166,7 +173,9 @@ exports.toggleToken = async (req, res) => {
     const { address } = req.user;
     const { chain, tokenAddress } = req.body;
 
-    const user = await User.findOne({ address: address.toLowerCase() });
+    const user = await prisma.user.findUnique({
+      where: { address: address.toLowerCase() },
+    });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -176,14 +185,16 @@ exports.toggleToken = async (req, res) => {
 
     const tokenKey = tokenAddress ? tokenAddress.toLowerCase() : null;
 
-    const existing = await UserToken.findOne({
-      user: user._id,
-      chain,
-      tokenAddress: tokenKey
+    const existing = await prisma.userToken.findFirst({
+      where: {
+        userId: user.id,
+        chain,
+        tokenAddress: tokenKey,
+      },
     });
 
     if (existing) {
-      await UserToken.deleteOne({ _id: existing._id });
+      await prisma.userToken.delete({ where: { id: existing.id } });
       return res.json({ success: true, active: false });
     }
 
@@ -201,14 +212,15 @@ exports.toggleToken = async (req, res) => {
       if (!tokenCfg) return res.status(400).json({ error: "Token not found" });
     }
 
-    const newToken = await UserToken.create({
-      user: user._id,
-      chain,
-      tokenAddress: tokenCfg.address ? tokenCfg.address.toLowerCase() : null,
-      symbol: tokenCfg.symbol,
-      fullName: tokenCfg.fullName || null,
-      decimals: tokenCfg.decimals,
-      binanceSymbol: tokenCfg.binanceSymbol
+    const newToken = await prisma.userToken.create({
+      data: {
+        userId: user.id,
+        chain,
+        tokenAddress: tokenCfg.address ? tokenCfg.address.toLowerCase() : null,
+        symbol: tokenCfg.symbol,
+        decimals: tokenCfg.decimals,
+        binanceSymbol: tokenCfg.binanceSymbol,
+      },
     });
 
     return res.json({ success: true, active: true, token: newToken });
