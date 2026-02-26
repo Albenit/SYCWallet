@@ -23,7 +23,7 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
       </div>
 
       {/* Portfolio tokens */}
-      <div className="max-h-[280px] overflow-y-auto custom-scroll pe-1">
+      <div className="max-h-[280px] overflow-y-auto custom-scroll px-3 bg-[#121212] rounded-3xl">
         {portfolio?.portfolio?.length > 0 ? (
           portfolio.portfolio.map((chain: any) =>
             chain.items?.map((item: any, idx: any) => {
@@ -54,10 +54,10 @@ export default function TokensTab({portfolio,portfolioLoading,portfolioError,ref
             })
           )
         ) : (
-          <div className="px-6 text-center text-gray-400 text-sm">
+          <div className="px-6 text-center text-gray-400 text-sm py-4">
             No tokens added yet.{" "}
             <span
-              className="text-blue-400 cursor-pointer underline"
+              className="text-[#DE0072] cursor-pointer underline"
               onClick={openModal}
             >
               Click here to add one

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Copy } from "lucide-react";
-import coinAvatar from "../assets/svg/coinAvatar.svg";
+import monexLogo from "../assets/monexLogo.png";
 import useWalletMe from "../hooks/useWalletMe";
 import usePortfolio from "../hooks/usePortfolio";
 import Navbar from "../components/navbar";
@@ -9,8 +9,8 @@ import SendTab from "../components/dashboardTabs/SendTab";
 import ReceiveTab from "../components/dashboardTabs/ReceiveTab";
 import SwapTab from "../components/dashboardTabs/SwapTab";
 import tokenIcon from "../assets/svg/tokensIcon.svg";
-import sendIcon from "../assets/svg/sendIcon.svg";
-import receiveIcon from "../assets/svg/receiveIcon.svg";
+import sendIcon from "../assets/svg/sendIcon2.svg";
+import receiveIcon from "../assets/svg/receiveIcon2.svg";
 import swapIcon from "../assets/svg/swapIcon.svg";
 import useBinancePrices from "../hooks/useBinancePrices";
 import PageLayout from "../components/layouts/PageLayout";
@@ -79,130 +79,121 @@ export default function Dashboard() {
   };
 
   return (
-    <PageLayout>
-      <div className="flex items-center justify-between px-6 pt-6">
-        <div className="flex items-center gap-3">
-          <div className="relative inline-flex h-9 w-9 items-center justify-center rounded-full">
-            <img src={coinAvatar} alt="coin avatar" />
+    <>
+      <PageLayout>
+        <div className="bg-[#1A1A1A] rounded-3xl">
+          <div className="flex items-center justify-between px-6 pt-6 ">
+            <div className="flex items-center bg-[#121212] p-3 rounded-full">
+              <div className="relative inline-flex h-9 w-9 items-center justify-center rounded-full">
+                <img src={monexLogo} alt="coin avatar" className="h-6 w-7"/>
+              </div>
+              <button
+                onClick={handleCopy}
+                className="group flex items-center gap-2 rounded-md px-3 py-1 text-sm text-gray-200"
+              >
+                <span className="flex flex-col items-start">
+                  <span className="text-[11px] text-[#DE0072] leading-tight">Your Wallet</span>
+                  <span className="font-medium">
+                    {Addressloading
+                      ? "Loading…"
+                      : address
+                        ? address.slice(0, 8) + "…." + address.slice(-6)
+                        : "No address"}
+                  </span>
+                </span>
+                {copied ? (
+                  <span className="text-xs text-[#DE0072]">Copied!</span>
+                ) : (
+                  <Copy
+                    size={18}
+                    color="#DE0072"
+                    className="opacity-60 group-hover:opacity-100 cursor-pointer"
+                  />
+                )}
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleCopy}
-            className="group flex items-center gap-2 rounded-md bg-white/5 px-3 py-1 text-sm text-gray-200 hover:bg-white/10"
-          >
-            <span className="font-medium">
-              {Addressloading
-                ? "Loading…"
-                : address
-                ? address.slice(0, 6) + "…" + address.slice(-4)
-                : "No address"}
-            </span>
-            {copied ? (
-              <span className="text-xs text-green-400">Copied!</span>
-            ) : (
-              <Copy
-                size={16}
-                className="opacity-60 group-hover:opacity-100 cursor-pointer"
-              />
-            )}
-          </button>
-        </div>
-      </div>
 
-      {/* Total Balance */}
-      <div className="px-6 pb-4 pt-6">
-        <div className="flex items-center  text-3xl font-bold tracking-wide sm:text-4xl">
-          {portfolioLoading ? ("$…") : (
-            <>
-              <span className="text-3xl">$</span>
-              <span className="text-3xl">{totalUsdValue.toFixed(2)}</span>
-            </>
-          )}
-        </div>
+          {/* Total Balance */}
+          <div className="px-6 pb-4 pt-6">
+            <div>
+              <span className="text-[12px] text-[#767676]">Your Balance</span>
+            </div>
+            <div className="flex items-center  text-[35px] font-bold tracking-wide sm:text-4xl">
+              {portfolioLoading ? ("$…") : (
+                <>
+                  <span className="text-3xl">$</span>
+                  <span className="text-3xl">{totalUsdValue.toFixed(2)}</span>
+                </>
+              )}
+            </div>
 
-        {/* Tabs */}
-        <div className="mt-6 flex gap-6 justify-center">
-          <button
-            onClick={() => setTab("token")}
-            className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${
-              tab === "token" ? "text-white" : "text-gray-400"
-            }`}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
-              <img src={tokenIcon} alt="tokens" />
-            </span>
-            <span>Tokens</span>
-          </button>
+            {/* Tabs */}
+            <div className="mt-6 flex items-center justify-between bg-[#121212] rounded-2xl p-1.5">
+              {[
+                { key: "token", label: "Tokens", icon: tokenIcon },
+                { key: "send", label: "Send", icon: sendIcon },
+                { key: "swap", label: "Swap", icon: swapIcon },
+                { key: "receive", label: "Receive", icon: receiveIcon },
+              ].map(({ key, label, icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setTab(key)}
+                  className={`
+                    cursor-pointer flex-1 flex items-center justify-center gap-2 py-2.5 px-1 rounded-xl text-xs sm:text-sm font-medium
+                    transition-all duration-200 ease-out
+                    ${tab === key
+                      ? "bg-[#DE0072] text-white shadow-[0_2px_12px_rgba(222,0,114,0.4)]"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                    }
+                  `}
+                >
+                  <img
+                    src={icon}
+                    alt={label}
+                    className={`h-4 w-4 sm:h-5 sm:w-5 transition-all ${tab === key ? "brightness-0 invert" : "opacity-60"}`}
+                  />
+                  <span className="hidden sm:inline">{label}</span>
+                  <span className="sm:hidden">{label}</span>
+                </button>
+              ))}
+            </div>
 
-          <button
-            onClick={() => setTab("send")}
-            className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${
-              tab === "send" ? "text-white" : "text-gray-400"
-            }`}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
-              <img src={sendIcon} alt="send" />
-            </span>
-            <span>Send</span>
-          </button>
+            {/* Tab Content */}
+            <div className="mt-6">
+              {tab === "token" && (
+                <TokensTab
+                  portfolio={portfolio}
+                  portfolioLoading={portfolioLoading}
+                  portfolioError={portfolioError}
+                  refetchPortfolio={refetchPortfolio}
+                  livePrices={livePrices}
+                />
+              )}
+              {tab === "send" && (
+                <SendTab
+                  portfolio={portfolio}
+                  portfolioLoading={portfolioLoading}
+                  portfolioError={portfolioError}
+                  refetchPortfolio={refetchPortfolio}
+                />
+              )}
+              {tab === "swap" && <SwapTab />}
+              {tab === "receive" && (
+                <ReceiveTab
+                  address={address}
+                  handleCopy={handleCopy}
+                  copied={copied}
+                />
+              )}
+            </div>
+          </div>
 
-          <button
-            onClick={() => setTab("swap")}
-            className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${
-              tab === "swap" ? "text-white" : "text-gray-400"
-            }`}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
-              <img src={swapIcon} alt="swap" />
-            </span>
-            <span>Swap</span>
-          </button>
-
-          <button
-            onClick={() => setTab("receive")}
-            className={`cursor-pointer flex flex-col items-center gap-2 text-sm ${
-              tab === "receive" ? "text-white" : "text-gray-400"
-            }`}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#02080E80]">
-              <img src={receiveIcon} alt="receive" />
-            </span>
-            <span>Receive</span>
-          </button>
         </div>
 
-        <hr className="text-[#FFFFFF1A] my-4" />
+        <Navbar />
+      </PageLayout>
 
-        {/* Tab Content */}
-        <div className="mt-8">
-          {tab === "token" && (
-            <TokensTab
-              portfolio={portfolio}
-              portfolioLoading={portfolioLoading}
-              portfolioError={portfolioError}
-              refetchPortfolio={refetchPortfolio}
-              livePrices={livePrices}
-            />
-          )}
-          {tab === "send" && (
-            <SendTab
-              portfolio={portfolio}
-              portfolioLoading={portfolioLoading}
-              portfolioError={portfolioError}
-              refetchPortfolio={refetchPortfolio}
-            />
-          )}
-          {tab === "swap" && <SwapTab />}
-          {tab === "receive" && (
-            <ReceiveTab
-              address={address}
-              handleCopy={handleCopy}
-              copied={copied}
-            />
-          )}
-        </div>
-      </div>
-
-      <Navbar />
-    </PageLayout>
+    </>
   );
 }

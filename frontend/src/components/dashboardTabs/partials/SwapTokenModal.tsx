@@ -21,7 +21,7 @@ export default function SwapTokenModal({ isOpen, onClose, onSelect, chainKey }: 
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50" onClick={handleOverlayClick}>
-      <div className="bg-[#08071a] p-6 rounded-xl w-80 ">
+      <div className="bg-[#1A1A1A] p-6 rounded-xl w-80 ">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-white">Select Token</h2>
           <button 
@@ -42,7 +42,7 @@ export default function SwapTokenModal({ isOpen, onClose, onSelect, chainKey }: 
             placeholder="Search tokens..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-md bg-[#02080E8C] px-4 py-2 text-sm text-white focus:outline-none"
+            className="w-full rounded-md bg-[#121212] px-4 py-2 text-sm text-white focus:outline-none"
           />
         </div>
 

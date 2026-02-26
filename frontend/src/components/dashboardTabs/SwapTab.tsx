@@ -297,121 +297,133 @@ export default function SwapTab() {
   };
 
   return (
-    <div className="space-y-4 max-w-sm mx-auto">
-      {/* FROM */}
-      <div className="bg-[#02080E8C] rounded-xl p-4 mb-0">
-        <div className="flex items-center gap-2 mb-3">
-          <p className="text-sm text-gray-400">From</p>
-          {fromChain?.logo && <img src={fromChain.logo} alt="" width={15} height={15} />}
-          <div
-            className="flex items-center cursor-pointer"
+    <div className="space-y-3  mx-auto">
+      {/* FROM Card */}
+      <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
+        {/* Chain selector row */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-medium uppercase tracking-wider text-[#767676]">From</span>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 bg-[#1A1A1A] hover:bg-[#252525] transition-colors px-3 py-1.5 rounded-full text-xs text-gray-300 cursor-pointer"
             onClick={() => {
               setSelecting("from");
               setIsChainModalOpen(true);
             }}
           >
+            {fromChain?.logo && <img src={fromChain.logo} alt="" className="w-4 h-4 rounded-full" />}
             <span>{fromChain?.label || "Select Network"}</span>
-            <ChevronRight size={18} className="opacity-60" />
+            <ChevronRight size={14} className="opacity-50" />
+          </button>
+        </div>
+
+        {/* Token + Amount row */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            className="flex items-center gap-2 bg-[#1A1A1A] hover:bg-[#252525] transition-colors pl-2 pr-3 py-2 rounded-full cursor-pointer shrink-0"
+            onClick={() => {
+              if (!fromChain) return Swal.fire("Select chain first", "", "info");
+              setSelecting("from");
+              setIsTokenModalOpen(true);
+            }}
+          >
+            {fromToken?.logo ? (
+              <img src={fromToken.logo} alt="" className="w-6 h-6 rounded-full" />
+            ) : (
+              <span className="w-6 h-6 rounded-full bg-[#333] flex items-center justify-center text-[10px] text-gray-500">?</span>
+            )}
+            <span className="text-sm font-medium text-white">{fromToken?.symbol?.toUpperCase() || "Token"}</span>
+            <ChevronRight size={14} className="opacity-50 text-gray-400" />
+          </button>
+
+          <div className="relative flex-1 min-w-0">
+            <input
+              type="number"
+              placeholder="0.00"
+              value={fromAmount}
+              onChange={(e) => setFromAmount(e.target.value)}
+              className="w-full pr-12 text-right bg-transparent text-white text-lg font-semibold focus:outline-none
+                [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <button
+              type="button"
+              onClick={handleFillMax}
+              disabled={fromBalanceLoading || !fromBalance || Number(fromBalance.value) <= 0}
+              className="absolute right-0 top-1/2 -translate-y-1/2 px-2 py-0.5 text-[10px] font-bold text-[#DE0072] bg-[#DE0072]/10 rounded-md cursor-pointer hover:bg-[#DE0072]/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              MAX
+            </button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              {fromToken?.logo && <img src={fromToken.logo} alt="" width={25} height={25} />}
-              <div
-                className="flex items-center cursor-pointer"
-                onClick={() => {
-                  if (!fromChain) return Swal.fire("Select chain first", "", "info");
-                  setSelecting("from");
-                  setIsTokenModalOpen(true);
-                }}
-              >
-                <span>{fromToken?.symbol?.toUpperCase() || "Select Token"}</span>
-                <ChevronRight size={18} className="opacity-60" />
-              </div>
-            </div>
-
-            <div className="relative w-45">
-              <input
-                type="number"
-                placeholder="0"
-                value={fromAmount}
-                onChange={(e) => setFromAmount(e.target.value)}
-                  className="w-full pr-10 text-right bg-transparent text-white text-sm focus:outline-none
-                    [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-              />
-              <button
-                type="button"
-                onClick={handleFillMax}
-                disabled={fromBalanceLoading || !fromBalance || Number(fromBalance.value) <= 0}
-                className="absolute right-0 top-1/2 -translate-y-1/2 px-2 text-xs font-semibold text-white cursor-pointer disabled:cursor-not-allowed"
-              >
-                MAX
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <p className="text-xs text-gray-400">
-              {fromBalanceLoading
-                ? "Balance: ..."
-                : fromBalance
-                ? `${formatBalanceDisplay(fromBalance.value)} ${fromBalance.symbol}`
-                : fromToken
-                ? `Balance: 0 ${fromToken.symbol?.toUpperCase() || ""}`
-                : ""}
-            </p>
-          </div>
+        {/* Balance */}
+        <div className="flex justify-end mt-2">
+          <p className="text-[11px] text-[#767676]">
+            {fromBalanceLoading
+              ? "Balance: ..."
+              : fromBalance
+              ? `${formatBalanceDisplay(fromBalance.value)} ${fromBalance.symbol}`
+              : fromToken
+              ? `Balance: 0 ${fromToken.symbol?.toUpperCase() || ""}`
+              : ""}
+          </p>
         </div>
       </div>
 
-      {/* ⇅ */}
-      <div className="flex justify-center -my-2 z-10 relative">
+      {/* Swap direction button */}
+      <div className="flex justify-center -my-5 z-10 relative">
         <button
-          className="bg-[#02080E8C] p-2 rounded-full border border-white/10 hover:bg-white/20 transition cursor-pointer"
+          type="button"
+          className="h-9 w-9 flex items-center justify-center rounded-full bg-[#1A1A1A] border-4 border-[#0A0A0A] hover:bg-[#DE0072]/20 hover:border-[#DE0072]/30 transition-all cursor-pointer group"
           onClick={swapSides}
         >
-          ⇅
+          <span className="text-base leading-none group-hover:text-[#DE0072] transition-colors">⇅</span>
         </button>
       </div>
 
-      {/* TO */}
-      <div className="bg-[#02080E8C] rounded-xl p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <p className="text-sm text-gray-400">To</p>
-          {toChain?.logo && <img src={toChain.logo} alt="" width={15} height={15} />}
-          <div
-            className="flex items-center cursor-pointer"
+      {/* TO Card */}
+      <div className="bg-[#121212] rounded-2xl p-5 border border-white/5">
+        {/* Chain selector row */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-medium uppercase tracking-wider text-[#767676]">To</span>
+          <button
+            type="button"
+            className="flex items-center gap-1.5 bg-[#1A1A1A] hover:bg-[#252525] transition-colors px-3 py-1.5 rounded-full text-xs text-gray-300 cursor-pointer"
             onClick={() => {
               setSelecting("to");
               setIsChainModalOpen(true);
             }}
           >
+            {toChain?.logo && <img src={toChain.logo} alt="" className="w-4 h-4 rounded-full" />}
             <span>{toChain?.label || "Select Network"}</span>
-            <ChevronRight size={18} className="opacity-60" />
-          </div>
+            <ChevronRight size={14} className="opacity-50" />
+          </button>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {toToken?.logo && <img src={toToken.logo} alt="" width={25} height={25} />}
-            <div
-              className="flex items-center cursor-pointer"
-              onClick={() => {
-                if (!toChain) return Swal.fire("Select chain first", "", "info");
-                setSelecting("to");
-                setIsTokenModalOpen(true);
-              }}
-            >
-              <span>{toToken?.symbol?.toUpperCase() || "Select Token"}</span>
-              <ChevronRight size={18} className="opacity-60" />
-            </div>
-          </div>
+        {/* Token + Amount row */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            className="flex items-center gap-2 bg-[#1A1A1A] hover:bg-[#252525] transition-colors pl-2 pr-3 py-2 rounded-full cursor-pointer shrink-0"
+            onClick={() => {
+              if (!toChain) return Swal.fire("Select chain first", "", "info");
+              setSelecting("to");
+              setIsTokenModalOpen(true);
+            }}
+          >
+            {toToken?.logo ? (
+              <img src={toToken.logo} alt="" className="w-6 h-6 rounded-full" />
+            ) : (
+              <span className="w-6 h-6 rounded-full bg-[#333] flex items-center justify-center text-[10px] text-gray-500">?</span>
+            )}
+            <span className="text-sm font-medium text-white">{toToken?.symbol?.toUpperCase() || "Token"}</span>
+            <ChevronRight size={14} className="opacity-50 text-gray-400" />
+          </button>
 
           <input
             type="text"
-            placeholder="0"
+            placeholder="0.00"
             value={
               loading
                 ? "Loading..."
@@ -422,13 +434,14 @@ export default function SwapTab() {
                 : toAmount
             }
             readOnly
-            className="w-24 text-right bg-transparent text-gray-400 text-sm focus:outline-none"
+            className="flex-1 min-w-0 text-right bg-transparent text-gray-400 text-lg font-semibold focus:outline-none"
           />
         </div>
       </div>
 
+      {/* Quote error */}
       {quoteError && (
-        <p className="text-xs text-red-400 text-right pr-1">
+        <p className="text-xs text-red-400 text-right px-1">
           {quoteError.code === "deposit_too_small" && quoteError.minAmount
             ? `Amount too low. Minimum is ${formatMinAmount(quoteError.minAmount)} ${
                 fromToken?.symbol?.toUpperCase() || ""
@@ -439,11 +452,24 @@ export default function SwapTab() {
 
       {/* Swap button */}
       <button
-          disabled={swapping || loading || !d || Boolean(quoteError)}
+        disabled={swapping || loading || !d || Boolean(quoteError)}
         onClick={handleSwap}
-        className="w-full rounded-full py-3 transition bg-blue-600 hover:bg-blue-700 cursor-pointer font-[700]"
+        className={`
+          w-full rounded-2xl py-3.5 text-sm font-bold tracking-wide transition-all 
+          ${swapping || loading || !d || Boolean(quoteError)
+            ? "bg-[#DE0072] text-white cursor-not-allowed"
+            : "bg-gradient-to-r from-[#DE0072] to-[#A0005A] hover:from-[#FF0080] hover:to-[#C00068] text-white shadow-lg shadow-[#DE0072]/20 cursor-pointer"
+          }
+        `}
       >
-        {swapping ? "Swapping..." : "Swap"}
+        {swapping ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            Swapping...
+          </span>
+        ) : (
+          "Swap"
+        )}
       </button>
 
       {/* Modals */}

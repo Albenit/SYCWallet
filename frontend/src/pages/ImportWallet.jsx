@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import sycLogo from "../assets/syclogo.png";
+import monexLogo from "../assets/monexLogo.png";
 import { useNavigate } from "react-router-dom";
 import { Wallet } from "ethers";
-import PageLayout from "../components/layouts/PageLayout";
+import PageLayoutBeforeLogin from "../components/layouts/PageLayoutBeforeLogin";
 import CryptoJS from "crypto-js";
 import { useAuth } from "../context/AuthContext";
 import { Eye, EyeOff } from "lucide-react";
@@ -113,23 +113,23 @@ export default function ImportWallet({ onImport }) {
   }
 
   return (
-    <PageLayout>
+    <PageLayoutBeforeLogin maxWidth="700px">
       <div className="px-6 pt-6">
         <div className="flex flex-col items-center mb-6">
-          <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
+          <img src={monexLogo} alt="SYC Logo" className="h-12 w-auto" />
         </div>
 
         <div className="flex items-center justify-center gap-12 mb-6">
           <button
             type="button"
             onClick={() => setTab("seed")}
-            className={`text-lg font-medium transition-colors cursor-pointer ${tab === "seed" ? "text-blue-300" : "text-gray-300/80"
+            className={`text-lg font-medium transition-colors cursor-pointer ${tab === "seed" ? "text-[#DE0072]" : "text-gray-300/80"
               }`}
             aria-pressed={tab === "seed"}
           >
             <span>Seed Phrase</span>
             <div
-              className={`mt-2 h-[2px] mx-auto w-20 transition-all ${tab === "seed" ? "bg-gradient-to-r from-[#3B82F6] to-[#5EE2FF]" : "bg-transparent"
+              className={`mt-2 h-[2px] mx-auto w-20 transition-all ${tab === "seed" ? "bg-gradient-to-r from-[#DE0072] to-[#c9175e]" : "bg-transparent"
                 }`}
             />
           </button>
@@ -143,7 +143,7 @@ export default function ImportWallet({ onImport }) {
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder={placeholder}
-            className="w-full h-30 md:h-30 bg-[#02080E8C] backdrop-blur-sm  rounded-md p-4 text-gray-200 placeholder:text-gray-400 resize-none focus:outline-none transition"
+            className="w-full h-30 md:h-30 bg-[#121212] backdrop-blur-sm  rounded-xl p-4 text-gray-200 placeholder:text-gray-400 resize-none focus:outline-none transition"
             aria-label={tab === "private" ? "Private Key input" : "Seed Phrase input"}
             spellCheck={false}
           />
@@ -157,7 +157,7 @@ export default function ImportWallet({ onImport }) {
                 value={password}
                 placeholder="Choose a strong password (min 8 chars)"
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 rounded bg-[#02080E8C]   focus:outline-none"
+                className="w-full p-3 rounded-xl bg-[#121212] focus:outline-none "
               />
               <button
                 type="button"
@@ -172,25 +172,58 @@ export default function ImportWallet({ onImport }) {
             </p>
           </div>
 
-          {error && <div className="text-red-400 text-sm mt-3">{error}</div>}
+          {error && <div className="text-[#DE0072] text-sm mt-3">{error}</div>}
 
-          <div className="mt-6">
+          <div className="flex items-center gap-1 mt-5">
+            {/* Circular arrow icon */}
             <button
               type="submit"
-              className="cursor-pointer w-full py-3 rounded-lg text-md font-semibold bg-gradient-to-r from-[#3045FFCF] to-[#6a64ff] hover:scale-[1.002] active:scale-[0.998] transform transition disabled:opacity-60"
               disabled={loading}
+              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-[#DE0072] to-[#c9175e] flex items-center justify-center hover:opacity-90 transition cursor-pointer"
+              title="Import wallet"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 14L20 9L15 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M4 20V13C4 11.9391 4.42143 10.9217 5.17157 10.1716C5.92172 9.42143 6.93913 9 8 9H20" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+
+            {/* Unlock button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 rounded-full bg-gradient-to-r from-[#DE0072] to-[#c9175e] py-3 font-semibold text-white hover:opacity-90 transition disabled:opacity-60 cursor-pointer text-center"
             >
               {loading ? "Importing..." : "Import Wallet"}
             </button>
           </div>
+          <div className="flex items-center gap-1 pt-3">
+            {/* Circular arrow icon */}
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="flex-shrink-0 w-12 h-12 rounded-full bg-[#1A1A1A] flex items-center justify-center hover:opacity-90 transition cursor-pointer"
+              title="Import wallet"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M9 14L4 9L9 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M20 20V13C20 11.9391 19.5786 10.9217 18.8284 10.1716C18.0783 9.42143 17.0609 9 16 9H4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
 
-          <div className="my-4 text-center">
-            <a onClick={() => navigate("/")} className="text-gray-300/80 hover:text-white cursor-pointer">
-              Back to login
-            </a>
+            </button>
+
+            {/* Unlock button */}
+            <button
+              onClick={() => navigate("/")}
+              type="submit"
+              className="flex-1 rounded-full bg-[#1A1A1A] py-3 font-semibold text-white hover:opacity-90 transition disabled:opacity-60 cursor-pointer text-center"
+            >
+              Back
+            </button>
           </div>
+
         </form>
       </div>
-    </PageLayout>
+    </PageLayoutBeforeLogin>
   );
 }

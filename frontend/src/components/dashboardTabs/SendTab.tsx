@@ -13,11 +13,11 @@ import CryptoJS from "crypto-js";
 interface SendTabProps {
   portfolio: any;
   portfolioLoading: boolean;
-  portfolioError: string | null;  
+  portfolioError: string | null;
   refetchPortfolio: () => void;
 }
 
-export default function SendTab({portfolio,portfolioLoading,portfolioError,refetchPortfolio,}: SendTabProps) {
+export default function SendTab({ portfolio, portfolioLoading, portfolioError, refetchPortfolio, }: SendTabProps) {
   const [selectedToken, setSelectedToken] = useState<any>(null);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
@@ -183,12 +183,12 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
         return;
       }
 
-  const estimatedFee = parseFloat(currentQuote?.estimatedFeeNative || "0");
-  const nativeBalance = parseFloat(currentQuote?.nativeBalance || "0");
-  const enteredAmount = parseFloat(amountValue || "0");
+      const estimatedFee = parseFloat(currentQuote?.estimatedFeeNative || "0");
+      const nativeBalance = parseFloat(currentQuote?.nativeBalance || "0");
+      const enteredAmount = parseFloat(amountValue || "0");
       const nativeSymbol = currentQuote?.symbol || selectedToken.chainNativeSymbol || selectedToken.symbol;
-  const tokenDecimals = selectedToken.decimals || 18;
-  let tokenAmountWei: bigint | null = null;
+      const tokenDecimals = selectedToken.decimals || 18;
+      let tokenAmountWei: bigint | null = null;
 
       if (selectedToken.type !== "token") {
         const totalNeeded = enteredAmount + estimatedFee;
@@ -257,16 +257,16 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
       const txData =
         selectedToken.type === "token"
           ? {
-              to: selectedToken.token,
-              data: new ethers.Interface(ERC20_ABI).encodeFunctionData(
-                "transfer",
-                [recipient, tokenAmountWei ?? ethers.parseUnits(amountValue, tokenDecimals)]
-              ),
-            }
+            to: selectedToken.token,
+            data: new ethers.Interface(ERC20_ABI).encodeFunctionData(
+              "transfer",
+              [recipient, tokenAmountWei ?? ethers.parseUnits(amountValue, tokenDecimals)]
+            ),
+          }
           : {
-              to: recipient,
-              value: ethers.parseEther(amountValue),
-            };
+            to: recipient,
+            value: ethers.parseEther(amountValue),
+          };
 
       const preparedResponse = await prepareTx(selectedToken.chainKey, txData, wallet.address);
       if (preparedResponse?.meta) {
@@ -372,7 +372,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
           {portfolioError && (
             <p className="text-red-500 text-sm">{portfolioError}</p>
           )}
-          <div className="max-h-[280px] overflow-y-auto custom-scroll">
+          <div className="max-h-[280px] overflow-y-auto custom-scroll bg-[#121212] rounded-3xl px-3 py-2">
             {portfolio?.portfolio?.length > 0 ? (() => {
               let count = 0;
 
@@ -386,7 +386,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
                 return nonZeroItems.map((item: any, idx: number) => (
                   <div
                     key={`${chain.chain}-${idx}`}
-                    className="rounded cursor-pointer hover:bg-white/2"
+                    className="rounded-3xl cursor-pointer hover:bg-white/2"
                     onClick={() => {
                       const decimals = item.decimals || 18;
                       let balanceWei = null;
@@ -394,7 +394,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
                         balanceWei = ethers
                           .parseUnits(String(item.balance ?? "0"), decimals)
                           .toString();
-                      } catch {}
+                      } catch { }
                       setSelectedToken({
                         ...item,
                         chainKey:
@@ -433,7 +433,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
               // show message if no tokens had non-zero balance
               if (count === 0) {
                 return (
-                  <div className="px-6 text-center text-gray-400 text-sm">
+                  <div className="px-6 text-center text-gray-400 text-sm py-2">
                     No assets with balance.
                   </div>
                 );
@@ -441,18 +441,18 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
 
               return rendered;
             })()
-            : (
-              <div className="px-6 text-center text-gray-400 text-sm">
-                No tokens added yet.
-              </div>
-            )}
+              : (
+                <div className="px-6 text-center text-gray-400 text-sm py-2">
+                  No tokens added yet.
+                </div>
+              )}
           </div>
         </>
       )}
 
       {/* Step 2: Send form */}
       {selectedToken && (
-        <>
+        <div className="bg-[#121212] rounded-3xl p-5">
           <div className="text-center rounded mb-4">
             <p className="text-xl font-semibold text-white-400">
               Send {selectedToken.symbol}
@@ -470,7 +470,7 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
             placeholder="Recipient Address"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white text-[12px] focus:outline-none"
+            className="w-full rounded-full bg-[#1A1A1A] px-4 py-3 text-sm text-[#ffffff] text-[12px] focus:outline-none mb-2"
           />
 
           <div className="relative w-full mb-1">
@@ -479,20 +479,20 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
               placeholder={`Amount in ${selectedToken.symbol}`}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-md bg-[#02080E8C] px-4 py-3 pr-14 text-sm text-[12px] text-white focus:outline-none"
+              className="w-full rounded-full bg-[#1A1A1A] px-4 py-3 pr-14 text-sm text-[#ffffff] text-[12px] focus:outline-none mb-2"
             />
 
             <button
               type="button"
               onClick={() => setAmount((selectedToken.rawBalance ?? selectedToken.balance) || "0")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-white cursor-pointer"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-[#DE0072] cursor-pointer"
             >
               MAX
             </button>
           </div>
 
           {errorTransaction && (
-            <p className="text-red-500 text-sm mb-0">{errorTransaction}</p>
+            <p className="text-[#DE0072] text-sm mb-0">{errorTransaction}</p>
           )}
 
           <div className="flex justify-between items-start gap-4">
@@ -529,15 +529,31 @@ export default function SendTab({portfolio,portfolioLoading,portfolioError,refet
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex items-center gap-1 pt-4">
+            {/* Circular arrow icon */}
             <button
+              type="button"
               onClick={handleSendClick}
-              className="w-full rounded-full py-3 transition bg-blue-600 hover:bg-blue-700 cursor-pointer font-[700]"
+              className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-[#DE0072] to-[#c9175e] flex items-center justify-center hover:opacity-90 transition cursor-pointer"
+              title="Import wallet"
             >
-              Send
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 14L20 9L15 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M4 20V13C4 11.9391 4.42143 10.9217 5.17157 10.1716C5.92172 9.42143 6.93913 9 8 9H20" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+
+            </button>
+
+            {/* Unlock button */}
+            <button
+              type="submit"
+              onClick={handleSendClick}
+              className="flex-1 rounded-full bg-gradient-to-r from-[#DE0072] to-[#c9175e] py-3 text-white hover:opacity-90 transition disabled:opacity-60 cursor-pointer text-center"
+            >
+              Confirm & Send
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

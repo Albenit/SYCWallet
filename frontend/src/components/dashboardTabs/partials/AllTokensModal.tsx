@@ -55,7 +55,7 @@ export default function AllTokensModal({isOpen,onClose,refetchPortfolio,}:any) {
       onClick={closeModal}
     >
       <div
-        className="bg-[#08071a] text-white p-6 rounded-lg w-[500px] max-h-[80vh] flex flex-col relative"
+        className="bg-[#1A1A1A] text-white p-6 rounded-lg w-[500px] max-h-[80vh] flex flex-col relative"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-4 flex-shrink-0">
@@ -73,7 +73,7 @@ export default function AllTokensModal({isOpen,onClose,refetchPortfolio,}:any) {
             placeholder="Search.."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} // update state
-            className="w-full rounded-md bg-[#02080E8C] px-4 py-3 text-sm text-white text-[12px] focus:outline-none"
+            className="w-full rounded-md bg-[#121212] px-4 py-3 text-sm text-white text-[12px] focus:outline-none"
           />
         </div>
 
@@ -105,7 +105,7 @@ export default function AllTokensModal({isOpen,onClose,refetchPortfolio,}:any) {
                                 addRemoveToken(token.chain, token.address)
                               }
                             />
-                            <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-green-500 transition-colors"></div>
+                            <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:bg-[#DE0072] transition-colors"></div>
                             <span className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
                           </label>
                         </div>

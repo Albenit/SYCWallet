@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import sycLogo from '../assets/syclogo.png';
+import monexLogo from '../assets/monexLogo.png';
 import { useNavigate } from "react-router-dom";
-import PageLayout from "../components/layouts/PageLayout";
+import PageLayoutBeforeLogin from "../components/layouts/PageLayoutBeforeLogin";
 
 export default function Signup() {
   const [accepted, setAccepted] = useState(false);
@@ -9,53 +9,67 @@ export default function Signup() {
 
   return (
 
-    <PageLayout>
+    <PageLayoutBeforeLogin maxWidth="700px">
       <div className="p-5 p-sm-8 text-center">
-        <div className="text-[26px] font-bold mb-2">Let’s get Started</div>
-        <p className="text-gray-400 text-[18px] text-sm mb-6 max-w-[500px] mx-auto">
-          Trusted by millions, Smart Yield Coin is a secure wallet making the
-          world of web3 accessible to all.
+        <div className="flex flex-col items-center mb-6">
+          <img src={monexLogo} alt="SYC Logo" className="h-12 w-auto" />
+        </div>
+        <div className="text-[36px] mb-2">Let’s get Started</div>
+        <p className="text-gray-400 text-[12px] text-sm mb-6 max-w-[400px] mx-auto">
+          Trusted by millions, Monex Protocol is a secure wallet making the world
+          of web3 accessible to all.
         </p>
 
-        <div className="flex flex-col items-center mb-6">
-          <img src={sycLogo} alt="SYC Logo" className="h-16 w-auto" />
-        </div>
+        <div className="flex items-center gap-1 pt-1">
+          {/* Circular arrow icon */}
+          <button
+            type="button"
+            onClick={() => navigate("/createnewpassword")}
+            className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-[#DE0072] to-[#c9175e] flex items-center justify-center hover:opacity-90 transition cursor-pointer"
+            title="Import wallet"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 14L20 9L15 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M4 20V13C4 11.9391 4.42143 10.9217 5.17157 10.1716C5.92172 9.42143 6.93913 9 8 9H20" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
 
-        <div className="flex justify-center space-x-2 mb-6">
-          <span className="w-3 h-3 rounded-full bg-white"></span>
-          <span className="w-3 h-3 rounded-full border border-white"></span>
-          <span className="w-3 h-3 rounded-full border border-white"></span>
-        </div>
-
-        <div className="flex items-center justify-center space-x-2 mb-3">
-          <input
-            id="terms"
-            type="checkbox"
-            className="w-4 h-4"
-            checked={accepted}
-            onChange={() => setAccepted(!accepted)}
-          />
-          <label htmlFor="terms" className="text-[13px] text-gray-300">
-            I agree to SYC’s Terms of use
-          </label>
-        </div>
-
-        <div className="space-y-4 flex flex-col justify-center items-center">
+          {/* Unlock button */}
           <button
             onClick={() => navigate("/createnewpassword")}
-            disabled={!accepted}
-            className={`w-xs py-3 rounded-lg font-medium transition bg-gradient-to-r from-blue-400 to-blue-600 hover:opacity-90 ${!accepted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+            type="submit"
+            className="flex-1 rounded-full bg-gradient-to-r from-[#DE0072] to-[#c9175e] py-3 font-semibold text-white hover:opacity-90 transition disabled:opacity-60 cursor-pointer text-center"
           >
             Create a new wallet
           </button>
-          <div className="inline-block p-[1px] rounded-lg  border border-[#07F1EF] ">
-            <button className="w-xs py-3 rounded-lg font-medium bg-transparent  text-white hover:bg-white/2 transition cursor-pointer" onClick={() => navigate("/import-wallet")}>
-              Import an existing wallet
-            </button>
-          </div>
+        </div>
+
+        <div className="flex items-center gap-1 pt-3">
+          {/* Circular arrow icon */}
+          <button
+            type="button"
+            onClick={() => navigate("/import-wallet")}
+            className="flex-shrink-0 w-12 h-12 rounded-full bg-[#1A1A1A] flex items-center justify-center hover:opacity-90 transition cursor-pointer"
+            title="Import wallet"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 14L4 9L9 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M20 20V13C20 11.9391 19.5786 10.9217 18.8284 10.1716C18.0783 9.42143 17.0609 9 16 9H4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+
+          </button>
+
+          {/* Unlock button */}
+          <button
+            onClick={() => navigate("/import-wallet")}
+            type="submit"
+            className="flex-1 rounded-full bg-[#1A1A1A] py-3 font-semibold text-white hover:opacity-90 transition disabled:opacity-60 cursor-pointer text-center"
+          >
+            Import an existing wallet
+          </button>
         </div>
       </div>
-    </PageLayout>
+    </PageLayoutBeforeLogin>
 
 
   );

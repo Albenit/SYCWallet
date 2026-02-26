@@ -1,10 +1,10 @@
 import React, { FC, PropsWithChildren } from "react";
 
-interface PageLayoutProps extends PropsWithChildren {
+interface PageLayoutBeforeLoginProps extends PropsWithChildren {
   maxWidth?: string;
 }
 
-const PageLayout: FC<PageLayoutProps> = ({ children, maxWidth = "640px" }) => {
+const PageLayoutBeforeLogin: FC<PageLayoutBeforeLoginProps> = ({ children, maxWidth = "640px" }) => {
   return (
     <div
       className="min-h-screen w-full text-white relative overflow-hidden"
@@ -48,7 +48,7 @@ const PageLayout: FC<PageLayoutProps> = ({ children, maxWidth = "640px" }) => {
       />
 
       <div className="mx-auto flex min-h-screen items-center justify-center p-4 sm:p-8 relative z-10" style={{ maxWidth }}>
-        <div className="w-full">
+        <div className="w-full ">
           {children}
         </div>
       </div>
@@ -56,4 +56,4 @@ const PageLayout: FC<PageLayoutProps> = ({ children, maxWidth = "640px" }) => {
   );
 };
 
-export default PageLayout;
+export default PageLayoutBeforeLogin;
