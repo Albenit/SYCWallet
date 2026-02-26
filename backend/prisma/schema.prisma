@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id         Int         @id @default(autoincrement())
+  address    String      @unique @db.VarChar(42)
+  lastLogin  DateTime?
+  loginCount Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  tokens     UserToken[]
+
+  @@index([address])
+  @@map("users")
+}
+
+model UserToken {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  chain          String   @db.VarChar(50)
+  tokenAddress   String?  @db.VarChar(42)
+  symbol         String   @db.VarChar(20)
+  decimals       Int
+  binanceSymbol  String   @db.VarChar(30)
+  createdAt      DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, chain, tokenAddress])
+  @@map("user_tokens")
+}
