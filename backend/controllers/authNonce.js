@@ -1,4 +1,4 @@
-const User = require('../models/user');
+const prisma = require('../config/db');
 const crypto = require("crypto");
 const { utils } = require("ethers");
 const NONCE_TTL_MS = 10 * 60 * 1000;
@@ -18,14 +18,14 @@ function sweepExpired() {
 }
 
 async function storeUserAddress(address) {
-    let user = await User.findOne({ address });
-    if (!user) {
-      user = await User.create({ address });
-    }
-
-    user.lastLogin = new Date();
-    user.loginCount = (user.loginCount || 0) + 1;
-    await user.save();
+    await prisma.user.upsert({
+      where: { address },
+      create: { address, lastLogin: new Date(), loginCount: 1 },
+      update: {
+        lastLogin: new Date(),
+        loginCount: { increment: 1 },
+      },
+    });
 }
 
 async function nonce(req, res) {
